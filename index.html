@@ -438,7 +438,7 @@
     /* Egg container clips the egg — grows downward from cloaca */
     #eggContainer {
       position: absolute;
-      top: 98px;
+      top: 98px; /* cloaca y position inside the 130px chicken element */
       left: 50%;
       transform: translateX(-50%);
       width: 68px;
@@ -478,6 +478,120 @@
     @keyframes eggWobble {
       from { transform: rotate(-7deg) scale(1); }
       to   { transform: rotate(7deg) scale(1.04); }
+    }
+
+    /* ─── ANGRY MAN ─── */
+    #angryManWrap {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      z-index: 800;
+      bottom: 6%;
+    }
+    #hitArrow {
+      text-align: center;
+      color: #ffe600;
+      font-size: 1rem;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000, 0 0 10px #ff6600;
+      animation: arrowBounce .45s ease-in-out infinite alternate;
+      margin-bottom: 4px;
+      pointer-events: none;
+      line-height: 1.5;
+    }
+    @keyframes arrowBounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(12px); }
+    }
+    #angryManSvg {
+      width: 110px;
+      height: 175px;
+      cursor: pointer;
+      animation: manShake .1s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.55));
+      display: block;
+    }
+    @keyframes manShake {
+      from { transform: rotate(-5deg) translateX(-4px); }
+      to   { transform: rotate(5deg) translateX(4px); }
+    }
+    #hitCounter {
+      margin-top: 8px;
+      font-size: 1.4rem;
+      min-height: 1.8rem;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .hitFlash {
+      position: fixed;
+      font-size: 3rem;
+      pointer-events: none;
+      z-index: 900;
+      animation: hitFlashAnim .55s ease-out forwards;
+    }
+    @keyframes hitFlashAnim {
+      0%   { transform: scale(0.2) rotate(0deg);  opacity: 1; }
+      50%  { transform: scale(1.5) rotate(15deg); opacity: 1; }
+      100% { transform: scale(1.8) rotate(30deg); opacity: 0; }
+    }
+
+    /* ─── CRACKED EGG ─── */
+    #crackedEggWrap {
+      position: fixed;
+      left: 50%;
+      bottom: 12%;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 800;
+    }
+    #crackedEggWrap svg {
+      width: 90px;
+      height: 110px;
+      animation: crackedWobble .7s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 14px rgba(0,0,0,.4));
+    }
+    @keyframes crackedWobble {
+      from { transform: rotate(-5deg) scale(1); }
+      to   { transform: rotate(5deg) scale(1.04); }
+    }
+    #crackLabel {
+      color: #ffe600;
+      font-size: 1.1rem;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+      margin-top: 10px;
+      animation: crackPulse .6s ease-in-out infinite alternate;
+    }
+    @keyframes crackPulse {
+      from { opacity: 0.75; transform: scale(0.95); }
+      to   { opacity: 1;    transform: scale(1.05); }
+    }
+
+    /* ─── EGG SPLAT ─── */
+    #eggSplat {
+      position: fixed;
+      inset: 0;
+      display: none;
+      pointer-events: none;
+      z-index: 850;
+      overflow: hidden;
+    }
+    #eggSplat.active { display: block; }
+    #eggSplat svg {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      animation: splatGrow 1.6s ease-out forwards;
+    }
+    @keyframes splatGrow {
+      0%  { transform: translate(-50%,-50%) scale(0.05); opacity: 1; }
+      40% { transform: translate(-50%,-50%) scale(1.3);  opacity: 1; }
+      100%{ transform: translate(-50%,-50%) scale(1.5);  opacity: 0; }
     }
   </style>
 </head>
@@ -547,12 +661,15 @@
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
+    <!-- outer glow stroke -->
     <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
       fill="none" stroke="rgba(255,255,100,.6)" stroke-width="12"
       stroke-linejoin="round" filter="url(#lglow)"/>
+    <!-- main bright bolt -->
     <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
       fill="none" stroke="white" stroke-width="5"
       stroke-linejoin="round"/>
+    <!-- inner core -->
     <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
       fill="none" stroke="#ffffcc" stroke-width="2"
       stroke-linejoin="round"/>
@@ -568,6 +685,7 @@
   <div id="restartArea">
     <div id="restartChicken">
       <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- tail feathers fanning out at top (rear view) -->
         <ellipse cx="50" cy="22" rx="5"  ry="14" fill="#c49000" transform="rotate(0  50 22)"/>
         <ellipse cx="38" cy="26" rx="4.5" ry="13" fill="#d4a800" transform="rotate(-22 38 26)"/>
         <ellipse cx="62" cy="26" rx="4.5" ry="13" fill="#d4a800" transform="rotate(22  62 26)"/>
@@ -575,25 +693,128 @@
         <ellipse cx="73" cy="35" rx="4"  ry="11" fill="#c49000" transform="rotate(42  73 35)"/>
         <ellipse cx="20" cy="47" rx="3.5" ry="9"  fill="#b88000" transform="rotate(-58 20 47)"/>
         <ellipse cx="80" cy="47" rx="3.5" ry="9"  fill="#b88000" transform="rotate(58  80 47)"/>
+        <!-- body (round, rear view) -->
         <ellipse cx="50" cy="60" rx="30" ry="26" fill="#f5c842"/>
+        <!-- body shading / feather texture -->
         <ellipse cx="50" cy="60" rx="28" ry="24" fill="none" stroke="#e0a800" stroke-width="1.5" opacity=".4"/>
         <ellipse cx="50" cy="60" rx="20" ry="17" fill="none" stroke="#e0a800" stroke-width="1"   opacity=".3"/>
+        <!-- wings visible on sides -->
         <ellipse cx="22" cy="62" rx="10" ry="17" fill="#d4a800" transform="rotate(-8 22 62)"/>
         <ellipse cx="78" cy="62" rx="10" ry="17" fill="#d4a800" transform="rotate(8  78 62)"/>
+        <!-- cloaca / butthole (red, center lower body) -->
         <ellipse cx="50" cy="78" rx="7"  ry="5"  fill="#8b0000"/>
         <ellipse cx="50" cy="78" rx="4.5" ry="3.2" fill="#cc1100"/>
         <ellipse cx="50" cy="78" rx="2.5" ry="1.8" fill="#ff3322"/>
+        <!-- legs -->
         <line x1="42" y1="84" x2="36" y2="97" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
         <line x1="58" y1="84" x2="64" y2="97" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+        <!-- feet (rear view — toes point outward) -->
         <line x1="36" y1="97" x2="26" y2="97" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
         <line x1="36" y1="97" x2="33" y2="100" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
         <line x1="64" y1="97" x2="74" y2="97" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
         <line x1="64" y1="97" x2="67" y2="100" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </div>
+    <!-- Egg container clips & reveals the egg from the cloaca downward -->
     <div id="eggContainer" onclick="eggClick()">
       <div id="egg">Click<br>me!</div>
     </div>
+  </div>
+
+  <!-- ── Angry Man ── -->
+  <div id="angryManWrap">
+    <div id="hitArrow">Hit me to<br>shut me up! ▼</div>
+    <svg id="angryManSvg" viewBox="0 0 100 175" xmlns="http://www.w3.org/2000/svg" onclick="hitMan()">
+      <!-- shirt -->
+      <rect x="27" y="97" width="46" height="50" rx="9" fill="#e03300"/>
+      <polygon points="50,97 39,103 50,116" fill="white" opacity="0.9"/>
+      <polygon points="50,97 61,103 50,116" fill="white" opacity="0.9"/>
+      <!-- left arm raised -->
+      <line x1="27" y1="109" x2="9" y2="79" stroke="#f0c090" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="7" cy="74" r="9" fill="#e8b880"/>
+      <!-- right arm raised -->
+      <line x1="73" y1="109" x2="91" y2="79" stroke="#f0c090" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="93" cy="74" r="9" fill="#e8b880"/>
+      <!-- legs -->
+      <rect x="33" y="145" width="14" height="27" rx="6" fill="#222"/>
+      <rect x="53" y="145" width="14" height="27" rx="6" fill="#222"/>
+      <ellipse cx="40" cy="172" rx="13" ry="5" fill="#111"/>
+      <ellipse cx="60" cy="172" rx="13" ry="5" fill="#111"/>
+      <!-- neck -->
+      <rect x="43" y="86" width="14" height="14" rx="6" fill="#f0c090"/>
+      <!-- head -->
+      <ellipse cx="50" cy="58" rx="30" ry="32" fill="#f0c090"/>
+      <!-- hair black straight -->
+      <ellipse cx="50" cy="28" rx="27" ry="13" fill="#111"/>
+      <rect x="23" y="28" width="54" height="10" fill="#111"/>
+      <rect x="22" y="30" width="10" height="20" rx="4" fill="#111"/>
+      <rect x="68" y="30" width="10" height="20" rx="4" fill="#111"/>
+      <!-- angry eyebrows slanting inward -->
+      <path d="M26,46 Q33,48 42,53" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <path d="M74,46 Q67,48 58,53" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <!-- eyes -->
+      <ellipse cx="37" cy="59" rx="5" ry="5" fill="white"/>
+      <ellipse cx="63" cy="59" rx="5" ry="5" fill="white"/>
+      <circle cx="38" cy="60" r="3" fill="#111"/>
+      <circle cx="64" cy="60" r="3" fill="#111"/>
+      <circle cx="39" cy="58" r="1" fill="white"/>
+      <circle cx="65" cy="58" r="1" fill="white"/>
+      <!-- nose -->
+      <ellipse cx="50" cy="67" rx="4" ry="3" fill="#d4956a"/>
+      <!-- screaming mouth -->
+      <ellipse cx="50" cy="78" rx="14" ry="12" fill="#550000"/>
+      <path d="M37,70 Q50,75 63,70" fill="#cc4040"/>
+      <rect x="40" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <rect x="46" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <rect x="52" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <ellipse cx="50" cy="83" rx="9" ry="5" fill="#e04050"/>
+      <rect x="42" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <rect x="47" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <rect x="52" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <!-- angry cheeks -->
+      <circle cx="28" cy="65" r="8" fill="#ff6060" opacity="0.4"/>
+      <circle cx="72" cy="65" r="8" fill="#ff6060" opacity="0.4"/>
+      <!-- sound waves -->
+      <path d="M12,58 Q5,50 12,42" fill="none" stroke="#ffe600" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M7,64 Q-2,50 7,36" fill="none" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <path d="M88,58 Q95,50 88,42" fill="none" stroke="#ffe600" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M93,64 Q102,50 93,36" fill="none" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <!-- sweat drops -->
+      <path d="M72,35 Q74,31 76,35 Q76,38 74,38 Q72,38 72,35" fill="#aaddff" opacity="0.85"/>
+      <path d="M68,44 Q70,41 71,44 Q71,46 70,46 Q68,46 68,44" fill="#aaddff" opacity="0.65"/>
+    </svg>
+    <div id="hitCounter">❤️❤️❤️❤️</div>
+  </div>
+
+  <!-- ── Cracked Egg ── -->
+  <div id="crackedEggWrap" onclick="crackedEggClick()">
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40,4 C15,4 6,35 6,55 C6,78 22,96 40,96 C58,96 74,78 74,55 C74,35 65,4 40,4 Z" fill="#fffef0" stroke="#ddd" stroke-width="1.5"/>
+      <polyline points="40,4 36,26 46,36 34,50 44,62 40,96" fill="none" stroke="#999" stroke-width="2.5" stroke-linejoin="round"/>
+      <polyline points="46,36 53,31" fill="none" stroke="#bbb" stroke-width="1.5"/>
+      <ellipse cx="46" cy="50" rx="7" ry="5" fill="#f5d020" opacity="0.55"/>
+    </svg>
+    <div id="crackLabel">Click me!</div>
+  </div>
+
+  <!-- ── Egg Splat ── -->
+  <div id="eggSplat">
+    <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" width="min(90vw,420px)">
+      <ellipse cx="150" cy="145" rx="130" ry="42" fill="#fffef5"/>
+      <ellipse cx="58"  cy="128" rx="33"  ry="16" fill="#fffef5"/>
+      <ellipse cx="242" cy="128" rx="30"  ry="15" fill="#fffef5"/>
+      <ellipse cx="100" cy="158" rx="25"  ry="12" fill="#fffef5"/>
+      <ellipse cx="200" cy="158" rx="28"  ry="13" fill="#fffef5"/>
+      <ellipse cx="80"  cy="110" rx="12"  ry="20" fill="#fffef5" opacity="0.9"/>
+      <ellipse cx="220" cy="112" rx="10"  ry="18" fill="#fffef5" opacity="0.9"/>
+      <ellipse cx="150" cy="96"  rx="8"   ry="14" fill="#fffef5" opacity="0.9"/>
+      <path d="M 95,108 Q 65,88 75,62 Q 90,37 115,52 L 110,102 Z" fill="#fffef0" stroke="#ddd" stroke-width="2"/>
+      <path d="M 205,108 Q 235,88 225,62 Q 210,37 185,52 L 190,102 Z" fill="#fffef0" stroke="#ddd" stroke-width="2"/>
+      <circle cx="150" cy="128" r="50" fill="#f5d020"/>
+      <circle cx="150" cy="128" r="44" fill="#f8de44"/>
+      <ellipse cx="136" cy="114" rx="16" ry="12" fill="#ffe86a" opacity="0.65"/>
+      <circle cx="133" cy="112" r="7" fill="rgba(255,255,200,0.5)"/>
+    </svg>
   </div>
 
 </div>
@@ -608,15 +829,16 @@ const R      = SIZE / 2;
 const img = new Image();
 img.src = 'photo.jpg';
 
+// mouthOpen: 0 = closed, 1 = fully open
 let mouthOpen    = 0;
 let mouthTarget  = 0;
-let chompPhase   = false;
+let chompPhase   = false; // true during snap-shut chomp
 
 img.onload = () => {
   faceY = window.innerHeight * 0.5 - R;
   placeFace(faceX, faceY);
   faceWrap.style.display = 'block';
-  mouthTarget = 0.18;
+  mouthTarget = 0.18; // resting — slight teeth show
   renderLoop();
 };
 
@@ -628,13 +850,16 @@ function renderLoop() {
 function drawFace() {
   ctx.clearRect(0, 0, SIZE, SIZE);
 
+  // Clip everything to circle
   ctx.save();
   ctx.beginPath();
   ctx.arc(R, R, R, 0, Math.PI * 2);
   ctx.clip();
 
+  // Draw photo
   ctx.drawImage(img, 0, 0, SIZE, SIZE);
 
+  // Smooth lerp toward target
   mouthOpen += (mouthTarget - mouthOpen) * 0.18;
 
   if (mouthOpen > 0.04) {
@@ -643,6 +868,7 @@ function drawFace() {
 
   ctx.restore();
 
+  // White border ring
   ctx.save();
   ctx.beginPath();
   ctx.arc(R, R, R - 2, 0, Math.PI * 2);
@@ -653,16 +879,19 @@ function drawFace() {
 }
 
 function drawMouth(t) {
+  // Mouth sits in the lower-centre of the face photo
   const mx   = R;
   const my   = SIZE * 0.76;
-  const mw   = SIZE * 0.40 * t;
-  const mh   = SIZE * 0.18 * t;
+  const mw   = SIZE * 0.40 * t;   // half-width
+  const mh   = SIZE * 0.18 * t;   // half-height
 
+  // ── Dark throat ──
   ctx.beginPath();
   ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
   ctx.fillStyle = '#0d0005';
   ctx.fill();
 
+  // ── Tongue ──
   if (t > 0.15) {
     const tongueAlpha = Math.min(1, (t - 0.15) / 0.35);
     ctx.globalAlpha = tongueAlpha;
@@ -670,6 +899,7 @@ function drawMouth(t) {
     ctx.ellipse(mx, my + mh * 0.28, mw * 0.58, mh * 0.62, 0, 0, Math.PI * 2);
     ctx.fillStyle = '#d96068';
     ctx.fill();
+    // Tongue centre crease
     ctx.beginPath();
     ctx.moveTo(mx, my - mh * 0.05);
     ctx.quadraticCurveTo(mx, my + mh * 0.3, mx, my + mh * 0.85);
@@ -679,6 +909,7 @@ function drawMouth(t) {
     ctx.globalAlpha = 1;
   }
 
+  // ── Upper teeth ──
   if (t > 0.2) {
     const toothAlpha = Math.min(1, (t - 0.2) / 0.4);
     ctx.globalAlpha = toothAlpha;
@@ -692,9 +923,11 @@ function drawMouth(t) {
     for (let i = 0; i < numT; i++) {
       const tx = startX + i * tW + tW * 0.07;
       const tw = tW * 0.84;
+      // tooth body
       ctx.fillStyle = '#f2f0ea';
       roundRect(ctx, tx, tTop, tw, tH, 2);
       ctx.fill();
+      // subtle shading on right side
       ctx.fillStyle = 'rgba(180,175,165,0.4)';
       roundRect(ctx, tx + tw * 0.6, tTop, tw * 0.35, tH, [0, 2, 2, 0]);
       ctx.fill();
@@ -702,6 +935,7 @@ function drawMouth(t) {
     ctx.globalAlpha = 1;
   }
 
+  // ── Lower teeth (just a hint) ──
   if (t > 0.35) {
     const la = Math.min(1, (t - 0.35) / 0.35);
     ctx.globalAlpha = la * 0.7;
@@ -723,6 +957,7 @@ function drawMouth(t) {
   }
 }
 
+// Polyfill for roundRect drawing
 function roundRect(ctx, x, y, w, h, r) {
   if (typeof r === 'number') r = [r, r, r, r];
   const [tl, tr, br, bl] = r;
@@ -825,22 +1060,26 @@ faceWrap.addEventListener('pointerup', () => { dragActive = false; });
 function checkProximity() {
   if (state !== 'stopped') return;
 
+  // Face mouth world position (centre-x, lower-third-y of the circle)
   const mouthWX = faceX + R;
   const mouthWY = faceY + SIZE * 0.76;
 
+  // Chicken centre
   const cx = chickenStopX + 40;
   const cy = chickenStopY + 0;
   const d  = Math.hypot(mouthWX - cx, mouthWY - cy);
 
+  // Scale mouth open 0→1 as distance goes 110→45
   const farDist  = 110;
   const nearDist = 45;
   if (d < farDist) {
     const t = 1 - Math.min(1, (d - nearDist) / (farDist - nearDist));
-    mouthTarget = 0.18 + t * 0.82;
+    mouthTarget = 0.18 + t * 0.82; // 0.18 resting → 1.0 full gape
   } else {
     mouthTarget = 0.18;
   }
 
+  // Chicken gets scared when face is close
   if (d < 90) {
     if (!chicken.classList.contains('scared') && !chicken.classList.contains('beingEaten')) {
       chicken.className = 'scared';
@@ -866,8 +1105,10 @@ function eat() {
   faceWrap.classList.remove('near');
   faceWrap.classList.add('eating');
 
+  // Mouth already open from proximity — slam it to 1
   mouthTarget = 1;
 
+  // Animate chicken flying into the mouth
   const mouthWX = faceX + R;
   const mouthWY = faceY + SIZE * 0.76;
   const cLeft   = parseFloat(chicken.style.left);
@@ -880,10 +1121,13 @@ function eat() {
   chicken.style.transform  = `translate(${dx}px, ${dy}px) scale(0.05)`;
   chicken.style.opacity    = '0';
 
+  // After chicken reaches mouth: snap shut then explode
   setTimeout(() => {
     chicken.style.display = 'none';
+    // Chomp: slam shut
     mouthTarget = 0;
     setTimeout(() => {
+      // Burst back open for the explosion
       mouthTarget = 0.9;
       explode();
     }, 180);
@@ -959,6 +1203,7 @@ const eggContainer   = document.getElementById('eggContainer');
 
 function launchBalloon() {
   state = 'balloon';
+  // Hide the face and HUD so balloon is the focus
   faceWrap.style.display = 'none';
   document.getElementById('hud').style.display = 'none';
   document.getElementById('hint').style.display = 'none';
@@ -975,6 +1220,7 @@ function popBalloon() {
 
   balloonWrap.classList.add('popping');
 
+  // Burst confetti from balloon
   const bRect = balloonWrap.getBoundingClientRect();
   const bx = bRect.left + bRect.width / 2;
   const by = bRect.top + bRect.height / 3;
@@ -997,6 +1243,7 @@ function popBalloon() {
     setTimeout(() => p.remove(), 900);
   }
 
+  // Trigger lightning after pop animation
   setTimeout(triggerLightning, 380);
 }
 
@@ -1007,10 +1254,12 @@ function triggerLightning() {
   flashOverlay.classList.add('flashing');
   lightningBolt.classList.add('striking');
 
+  // STUPID appears while flash is still bright
   setTimeout(() => {
     stupidText.style.transform = '';
     stupidText.className = 'visible';
 
+    // After 3s, hide STUPID and show restart button
     setTimeout(() => {
       stupidText.classList.remove('visible');
       stupidText.classList.add('hiding');
@@ -1036,15 +1285,19 @@ function startRestartSequence() {
   balloonWrap.className = '';
   balloonWrap.style.display = '';
 
+  // Area bounces up from bottom
   restartArea.style.display = 'block';
   void restartArea.offsetWidth;
   restartArea.className = 'entering';
 
+  // After chicken lands, strain and push egg
   setTimeout(() => {
     restartChicken.classList.add('laying');
 
+    // Start egg pushing out mid-strain
     setTimeout(() => {
       eggContainer.classList.add('pushing');
+      // Once fully out, enable wobble + clicking
       setTimeout(() => {
         eggContainer.classList.add('done');
       }, 2200);
@@ -1058,20 +1311,112 @@ function eggClick() {
   restartArea.style.display = '';
   eggContainer.className = '';
   restartChicken.className = '';
-  flashOverlay.className = '';
-  stupidText.className = '';
-  stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+  showAngryMan();
+}
 
-  firstEatDone = false;
-  score = 0;
-  scoreNum.textContent = '0';
+// ─── ANGRY MAN SEQUENCE ──────────────────────────────────
+const angryManWrap   = document.getElementById('angryManWrap');
+const angryManSvg    = document.getElementById('angryManSvg');
+const hitCounterEl   = document.getElementById('hitCounter');
+const crackedEggWrap = document.getElementById('crackedEggWrap');
+const eggSplatEl     = document.getElementById('eggSplat');
+let hitCount = 0;
 
-  document.getElementById('hud').style.display = 'flex';
-  document.getElementById('hint').style.display = 'block';
-  faceWrap.style.display = 'block';
-  mouthTarget = 0.18;
+function showAngryMan() {
+  state = 'angryMan';
+  hitCount = 0;
+  hitCounterEl.textContent = '❤️❤️❤️❤️';
+  angryManWrap.style.display = 'flex';
+}
 
-  resetRound();
+function hitMan() {
+  if (state !== 'angryMan') return;
+  hitCount++;
+
+  // White flash on the man
+  angryManSvg.style.filter = 'brightness(6) saturate(0)';
+  setTimeout(() => { angryManSvg.style.filter = ''; }, 150);
+
+  // Update hearts
+  const remaining = 4 - hitCount;
+  hitCounterEl.textContent = '❤️'.repeat(Math.max(0, remaining));
+
+  // Impact star at random spot on man
+  const impacts = ['⭐', '💫', '✨', '💥'];
+  const rect = angryManSvg.getBoundingClientRect();
+  const star = document.createElement('div');
+  star.className = 'hitFlash';
+  star.textContent = impacts[(hitCount - 1) % impacts.length];
+  star.style.left = (rect.left + 10 + Math.random() * (rect.width - 40)) + 'px';
+  star.style.top  = (rect.top  + 10 + Math.random() * rect.height * 0.55) + 'px';
+  document.body.appendChild(star);
+  setTimeout(() => star.remove(), 650);
+
+  if (hitCount >= 4) {
+    state = 'manExploding';
+    setTimeout(explodeMan, 300);
+  }
+}
+
+function explodeMan() {
+  const rect = angryManSvg.getBoundingClientRect();
+  const bx = rect.left + rect.width / 2;
+  const by = rect.top  + rect.height / 2;
+
+  const colors = ['#ff0','#ff4400','#fff','#ff88ff','#ffd700'];
+  for (let i = 0; i < 24; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 70 + Math.random() * 150;
+    const p = document.createElement('div');
+    p.style.cssText = `
+      position:fixed;border-radius:50%;pointer-events:none;z-index:900;
+      left:${bx}px;top:${by}px;
+      width:${8+Math.random()*12}px;height:${8+Math.random()*12}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;
+      --dur:${.4+Math.random()*.55}s;
+      animation:sparkFly var(--dur) ease-out forwards;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+  const boom = document.createElement('div');
+  boom.className = 'bigBoom';
+  boom.textContent = '💥';
+  boom.style.cssText = `position:fixed;left:${bx-45}px;top:${by-45}px;z-index:900;`;
+  document.body.appendChild(boom);
+  setTimeout(() => boom.remove(), 800);
+
+  angryManWrap.style.display = 'none';
+  setTimeout(showCrackedEgg, 900);
+}
+
+function showCrackedEgg() {
+  state = 'crackedEgg';
+  crackedEggWrap.style.display = 'flex';
+}
+
+function crackedEggClick() {
+  if (state !== 'crackedEgg') return;
+  state = 'yolkSpill';
+  crackedEggWrap.style.display = 'none';
+
+  eggSplatEl.style.display = 'block';
+
+  setTimeout(() => {
+    eggSplatEl.style.display = 'none';
+    flashOverlay.className = '';
+    stupidText.className = '';
+    stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+    firstEatDone = false;
+    score = 0;
+    scoreNum.textContent = '0';
+    document.getElementById('hud').style.display = 'flex';
+    document.getElementById('hint').style.display = 'block';
+    faceWrap.style.display = 'block';
+    mouthTarget = 0.18;
+    resetRound();
+  }, 1600);
 }
 
 function addEl(tag, cls, styles, text) {
@@ -1097,7 +1442,7 @@ function resetRound() {
   launchBtn.disabled = false;
   hint.textContent = 'Click the button to send a chicken running!';
   dragArrow.style.display = 'block';
-  mouthTarget = 0.18;
+  mouthTarget = 0.18; // back to resting open
 
   faceX = 80;
   faceY = window.innerHeight * .5 - R;
