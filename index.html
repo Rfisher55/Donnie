@@ -15,24 +15,19 @@
       background: #000;
     }
 
-
     /* ─── GAME AREA ─── */
     #game {
       position: relative;
       width: 100vw;
       height: 100vh;
-      display: block;
       background: linear-gradient(180deg, #87CEEB 0%, #c9eaf7 55%, #6ab04c 55%, #4a8c25 100%);
       overflow: hidden;
     }
 
-    /* Grass blades */
     #game::after {
       content: '';
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 45%;
       background: repeating-linear-gradient(
         90deg,
@@ -49,18 +44,11 @@
       border-radius: 50px;
       opacity: .85;
     }
-    .cloud::before, .cloud::after {
-      content: '';
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-    }
 
     /* ─── HUD ─── */
     #hud {
       position: absolute;
-      top: 18px;
-      left: 50%;
+      top: 18px; left: 50%;
       transform: translateX(-50%);
       display: flex;
       gap: 20px;
@@ -97,8 +85,7 @@
 
     #hint {
       position: absolute;
-      top: 82px;
-      left: 50%;
+      top: 82px; left: 50%;
       transform: translateX(-50%);
       color: rgba(255,255,255,.9);
       font-size: 1rem;
@@ -109,7 +96,6 @@
       border-radius: 20px;
       z-index: 100;
       white-space: nowrap;
-      transition: opacity .4s;
     }
 
     /* ─── CHICKEN ─── */
@@ -121,28 +107,39 @@
       z-index: 50;
       user-select: none;
       pointer-events: none;
-      transform-origin: center bottom;
+      transform-origin: center center;
+      transition: transform 0s, opacity 0s;
     }
     #chicken svg { width: 100%; height: 100%; }
     #chicken.running { animation: bobRun .18s steps(1) infinite; }
     @keyframes bobRun {
-      0%   { transform: translateY(0px) scaleX(1); }
-      50%  { transform: translateY(-6px) scaleX(1); }
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-6px); }
     }
     #chicken.stopped {
       animation: chickenIdle .6s ease-in-out infinite alternate;
-      transform: scale(1.15);
     }
     @keyframes chickenIdle {
-      from { transform: scale(1.15) rotate(-3deg); }
-      to   { transform: scale(1.15) rotate(3deg); }
+      from { transform: scale(1.1) rotate(-3deg); }
+      to   { transform: scale(1.1) rotate(3deg); }
+    }
+    #chicken.scared {
+      animation: chickenScared .08s ease-in-out infinite alternate;
+    }
+    @keyframes chickenScared {
+      from { transform: scale(1.1) rotate(-6deg) translateX(-3px); }
+      to   { transform: scale(1.1) rotate(6deg) translateX(3px); }
+    }
+    #chicken.beingEaten {
+      animation: none;
+      transition: transform 0.35s ease-in, opacity 0.35s ease-in !important;
     }
 
     /* ─── PLAYER FACE ─── */
     #faceWrap {
       position: absolute;
-      width: 130px;
-      height: 130px;
+      width: 140px;
+      height: 140px;
       cursor: grab;
       z-index: 60;
       user-select: none;
@@ -150,67 +147,27 @@
     }
     #faceWrap:active { cursor: grabbing; }
 
-    #faceCircle {
-      width: 100%;
-      height: 100%;
+    #faceCanvas {
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
-      overflow: hidden;
-      border: 4px solid #fff;
       box-shadow: 0 4px 20px rgba(0,0,0,.5);
-      position: relative;
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      transition: border-color .2s;
+      display: block;
     }
-    #faceWrap.near #faceCircle  { border-color: #ffe600; box-shadow: 0 0 24px #ffe600; }
-    #faceWrap.eating #faceCircle { border-color: #ff4500; box-shadow: 0 0 30px #ff4500; }
-
-    /* Open-mouth overlay */
-    #mouth {
-      position: absolute;
-      bottom: 16%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 48px;
-      height: 0px;
-      background: #700;
-      border-radius: 0 0 24px 24px;
-      overflow: hidden;
-      transition: height .15s;
-      pointer-events: none;
-    }
-    #mouth.open { height: 22px; }
-    #mouth.chomp { height: 32px; animation: chomp .12s steps(1) 3; }
-    @keyframes chomp {
-      0%,100% { height: 32px; }
-      50%      { height: 4px; }
-    }
-    /* tongue */
-    #mouth::after {
-      content: '';
-      position: absolute;
-      bottom: 3px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 8px;
-      background: #e06060;
-      border-radius: 0 0 10px 10px;
-    }
+    #faceWrap.near #faceCanvas  { box-shadow: 0 0 0 4px #ffe600, 0 0 28px #ffe600; }
+    #faceWrap.eating #faceCanvas { box-shadow: 0 0 0 4px #ff4500, 0 0 34px #ff4500; }
 
     /* ─── DRAG LABEL ─── */
     #dragArrow {
       position: absolute;
-      left: 50%;
-      top: -38px;
+      left: 50%; top: -40px;
       transform: translateX(-50%);
       color: #ffe600;
       font-size: 1.5rem;
       animation: bounce .5s ease-in-out infinite alternate;
       pointer-events: none;
     }
-    @keyframes bounce { from { top: -38px; } to { top: -28px; } }
+    @keyframes bounce { from { top: -40px; } to { top: -30px; } }
 
     /* ─── EXPLOSION LAYER ─── */
     #explosionLayer {
@@ -250,8 +207,6 @@
       0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
       100% { transform: translate(var(--tx),var(--ty)) rotate(var(--rot,360deg)); opacity: 0; }
     }
-
-    /* ─── COMBO POPUP ─── */
     .comboText {
       position: absolute;
       font-size: 2.5rem;
@@ -270,8 +225,6 @@
   </style>
 </head>
 <body>
-
-<!-- ═══ GAME ═══ -->
 <div id="game">
 
   <!-- Clouds -->
@@ -291,82 +244,207 @@
   </div>
   <div id="hint">Click the button to send a chicken running!</div>
 
-  <!-- Chicken SVG -->
+  <!-- Chicken -->
   <div id="chicken">
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <!-- body -->
       <ellipse cx="50" cy="62" rx="28" ry="22" fill="#f5c842"/>
-      <!-- head -->
       <circle cx="78" cy="40" r="16" fill="#f5c842"/>
-      <!-- eye -->
       <circle cx="84" cy="36" r="3.5" fill="#222"/>
       <circle cx="85.2" cy="34.8" r="1" fill="white"/>
-      <!-- beak top -->
       <polygon points="96,40 88,37 88,40" fill="#e07b00"/>
-      <!-- beak bottom -->
       <polygon points="96,42 88,40 88,44" fill="#c06000"/>
-      <!-- comb -->
       <ellipse cx="72" cy="26" rx="5" ry="7" fill="#e83030"/>
       <ellipse cx="78" cy="24" rx="4" ry="6" fill="#e83030"/>
-      <!-- wattle -->
       <ellipse cx="90" cy="50" rx="4" ry="6" fill="#e83030"/>
-      <!-- wing -->
       <ellipse cx="44" cy="60" rx="14" ry="9" fill="#d4a800" transform="rotate(-15 44 60)"/>
-      <!-- tail feathers -->
       <ellipse cx="22" cy="52" rx="8" ry="5" fill="#c49000" transform="rotate(-40 22 52)"/>
       <ellipse cx="20" cy="58" rx="8" ry="5" fill="#d4a800" transform="rotate(-55 20 58)"/>
-      <!-- legs group (toggled for running) -->
-      <g id="legsA">
-        <line x1="46" y1="82" x2="38" y2="96" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
-        <line x1="54" y1="82" x2="62" y2="98" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
-        <line x1="38" y1="96" x2="28" y2="96" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
-        <line x1="62" y1="98" x2="72" y2="98" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
-      </g>
+      <line x1="46" y1="82" x2="38" y2="96" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+      <line x1="54" y1="82" x2="62" y2="98" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+      <line x1="38" y1="96" x2="28" y2="96" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+      <line x1="62" y1="98" x2="72" y2="98" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
     </svg>
   </div>
 
-  <!-- Player face -->
+  <!-- Player face (canvas-rendered with animated mouth) -->
   <div id="faceWrap">
     <div id="dragArrow">👆</div>
-    <div id="faceCircle">
-      <div id="mouth"></div>
-    </div>
+    <canvas id="faceCanvas" width="140" height="140"></canvas>
   </div>
 
-  <!-- Explosion canvas -->
   <div id="explosionLayer"></div>
 </div>
 
 <script>
-// ─── STATE ───────────────────────────────────────────────
-let score = 0;
-let state = 'idle'; // idle | running | stopped | eating | exploding
-let chickenStopX = 0, chickenStopY = 0;
-let faceX = 80, faceY = 0;
-let dragActive = false, ox = 0, oy = 0;
-let rafId = null;
-let chickenCurrentX = -100;
+// ─── CANVAS FACE SETUP ────────────────────────────────────
+const canvas = document.getElementById('faceCanvas');
+const ctx    = canvas.getContext('2d');
+const SIZE   = 140;
+const R      = SIZE / 2;
 
-// ─── ELEMENTS ────────────────────────────────────────────
-const game       = document.getElementById('game');
-const chicken    = document.getElementById('chicken');
-const faceWrap   = document.getElementById('faceWrap');
-const faceCircle = document.getElementById('faceCircle');
-const mouth      = document.getElementById('mouth');
-const launchBtn  = document.getElementById('launchBtn');
-const hint       = document.getElementById('hint');
-const scoreNum   = document.getElementById('scoreNum');
-const expLayer   = document.getElementById('explosionLayer');
-const dragArrow  = document.getElementById('dragArrow');
+const img = new Image();
+img.src = 'photo.jpg';
 
-// ─── AUTO-LOAD PHOTO ─────────────────────────────────────
-window.addEventListener('load', () => {
-  faceCircle.style.backgroundImage = 'url(photo.jpg)';
-  faceY = window.innerHeight * 0.5 - 65;
+// mouthOpen: 0 = closed, 1 = fully open
+let mouthOpen    = 0;
+let mouthTarget  = 0;
+let chompPhase   = false; // true during snap-shut chomp
+
+img.onload = () => {
+  faceY = window.innerHeight * 0.5 - R;
   placeFace(faceX, faceY);
   faceWrap.style.display = 'block';
-  mouth.classList.add('open');
-});
+  mouthTarget = 0.18; // resting — slight teeth show
+  renderLoop();
+};
+
+function renderLoop() {
+  drawFace();
+  requestAnimationFrame(renderLoop);
+}
+
+function drawFace() {
+  ctx.clearRect(0, 0, SIZE, SIZE);
+
+  // Clip everything to circle
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(R, R, R, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Draw photo
+  ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+  // Smooth lerp toward target
+  mouthOpen += (mouthTarget - mouthOpen) * 0.18;
+
+  if (mouthOpen > 0.04) {
+    drawMouth(mouthOpen);
+  }
+
+  ctx.restore();
+
+  // White border ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(R, R, R - 2, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMouth(t) {
+  // Mouth sits in the lower-centre of the face photo
+  const mx   = R;
+  const my   = SIZE * 0.76;
+  const mw   = SIZE * 0.40 * t;   // half-width
+  const mh   = SIZE * 0.18 * t;   // half-height
+
+  // ── Dark throat ──
+  ctx.beginPath();
+  ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#0d0005';
+  ctx.fill();
+
+  // ── Tongue ──
+  if (t > 0.15) {
+    const tongueAlpha = Math.min(1, (t - 0.15) / 0.35);
+    ctx.globalAlpha = tongueAlpha;
+    ctx.beginPath();
+    ctx.ellipse(mx, my + mh * 0.28, mw * 0.58, mh * 0.62, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#d96068';
+    ctx.fill();
+    // Tongue centre crease
+    ctx.beginPath();
+    ctx.moveTo(mx, my - mh * 0.05);
+    ctx.quadraticCurveTo(mx, my + mh * 0.3, mx, my + mh * 0.85);
+    ctx.strokeStyle = 'rgba(160,50,55,0.45)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Upper teeth ──
+  if (t > 0.2) {
+    const toothAlpha = Math.min(1, (t - 0.2) / 0.4);
+    ctx.globalAlpha = toothAlpha;
+    const numT   = 5;
+    const totalW = mw * 1.72;
+    const tW     = totalW / numT;
+    const tH     = mh * 0.55;
+    const tTop   = my - mh * 0.52;
+    const startX = mx - totalW / 2;
+
+    for (let i = 0; i < numT; i++) {
+      const tx = startX + i * tW + tW * 0.07;
+      const tw = tW * 0.84;
+      // tooth body
+      ctx.fillStyle = '#f2f0ea';
+      roundRect(ctx, tx, tTop, tw, tH, 2);
+      ctx.fill();
+      // subtle shading on right side
+      ctx.fillStyle = 'rgba(180,175,165,0.4)';
+      roundRect(ctx, tx + tw * 0.6, tTop, tw * 0.35, tH, [0, 2, 2, 0]);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Lower teeth (just a hint) ──
+  if (t > 0.35) {
+    const la = Math.min(1, (t - 0.35) / 0.35);
+    ctx.globalAlpha = la * 0.7;
+    const numB   = 4;
+    const totalW = mw * 1.3;
+    const tW     = totalW / numB;
+    const tH     = mh * 0.38;
+    const tBot   = my + mh * 0.5;
+    const startX = mx - totalW / 2;
+
+    for (let i = 0; i < numB; i++) {
+      const tx = startX + i * tW + tW * 0.1;
+      const tw = tW * 0.78;
+      ctx.fillStyle = '#ede9e0';
+      roundRect(ctx, tx, tBot - tH, tw, tH, 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Polyfill for roundRect drawing
+function roundRect(ctx, x, y, w, h, r) {
+  if (typeof r === 'number') r = [r, r, r, r];
+  const [tl, tr, br, bl] = r;
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + tr);
+  ctx.lineTo(x + w, y + h - br);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+  ctx.lineTo(x + bl, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - bl);
+  ctx.lineTo(x, y + tl);
+  ctx.quadraticCurveTo(x, y, x + tl, y);
+  ctx.closePath();
+}
+
+// ─── GAME STATE ──────────────────────────────────────────
+let score          = 0;
+let state          = 'idle';
+let chickenStopX   = 0, chickenStopY = 0;
+let faceX          = 80, faceY = 0;
+let dragActive     = false, ox = 0, oy = 0;
+let chickenCurrentX = -100;
+
+const chicken  = document.getElementById('chicken');
+const faceWrap = document.getElementById('faceWrap');
+const launchBtn = document.getElementById('launchBtn');
+const hint      = document.getElementById('hint');
+const scoreNum  = document.getElementById('scoreNum');
+const expLayer  = document.getElementById('explosionLayer');
+const dragArrow = document.getElementById('dragArrow');
 
 // ─── LAUNCH ──────────────────────────────────────────────
 function launchChicken() {
@@ -379,32 +457,33 @@ function launchChicken() {
   const minY = window.innerHeight * 0.48;
   const maxY = window.innerHeight * 0.80;
   chickenStopY = minY + Math.random() * (maxY - minY);
-  chickenStopX = window.innerWidth * (.35 + Math.random() * .48);
+  chickenStopX = window.innerWidth * (.35 + Math.random() * .46);
 
   chickenCurrentX = -90;
-  chicken.style.left = chickenCurrentX + 'px';
-  chicken.style.top  = (chickenStopY - 40) + 'px';
-  chicken.style.display = 'block';
-  chicken.classList.add('running');
+  chicken.style.left      = chickenCurrentX + 'px';
+  chicken.style.top       = (chickenStopY - 40) + 'px';
+  chicken.style.display   = 'block';
+  chicken.style.opacity   = '1';
   chicken.style.transform = '';
+  chicken.style.transition = '';
+  chicken.className       = 'running';
 
   runChicken();
 }
 
 function runChicken() {
-  const speed = 5 + score * 0.4; // gets faster as score grows
+  const speed = 5 + score * 0.4;
   chickenCurrentX += speed;
   chicken.style.left = chickenCurrentX + 'px';
 
   if (chickenCurrentX < chickenStopX) {
-    rafId = requestAnimationFrame(runChicken);
+    requestAnimationFrame(runChicken);
   } else {
     chickenCurrentX = chickenStopX;
     chicken.style.left = chickenStopX + 'px';
-    chicken.classList.remove('running');
-    chicken.classList.add('stopped');
+    chicken.className = 'stopped';
     state = 'stopped';
-    hint.textContent = 'Drag the face — feed him that chicken! 🍗';
+    hint.textContent = 'Drag the face to eat the chicken! 🍗';
     dragArrow.style.display = 'block';
   }
 }
@@ -412,8 +491,8 @@ function runChicken() {
 // ─── DRAG ────────────────────────────────────────────────
 function placeFace(x, y) {
   faceX = x; faceY = y;
-  faceWrap.style.left = faceX + 'px';
-  faceWrap.style.top  = faceY + 'px';
+  faceWrap.style.left = x + 'px';
+  faceWrap.style.top  = y + 'px';
 }
 
 faceWrap.addEventListener('pointerdown', e => {
@@ -436,58 +515,98 @@ faceWrap.addEventListener('pointerup', () => { dragActive = false; });
 function checkProximity() {
   if (state !== 'stopped') return;
 
-  const fx = faceX + 65, fy = faceY + 65;
-  const cx = chickenStopX + 40, cy = chickenStopY - 5;
-  const d  = Math.hypot(fx - cx, fy - cy);
+  // Face mouth world position (centre-x, lower-third-y of the circle)
+  const mouthWX = faceX + R;
+  const mouthWY = faceY + SIZE * 0.76;
 
-  if (d < 55) {
-    faceWrap.classList.add('near');
+  // Chicken centre
+  const cx = chickenStopX + 40;
+  const cy = chickenStopY + 0;
+  const d  = Math.hypot(mouthWX - cx, mouthWY - cy);
+
+  // Scale mouth open 0→1 as distance goes 110→45
+  const farDist  = 110;
+  const nearDist = 45;
+  if (d < farDist) {
+    const t = 1 - Math.min(1, (d - nearDist) / (farDist - nearDist));
+    mouthTarget = 0.18 + t * 0.82; // 0.18 resting → 1.0 full gape
   } else {
-    faceWrap.classList.remove('near');
+    mouthTarget = 0.18;
   }
 
-  if (d < 42) {
+  // Chicken gets scared when face is close
+  if (d < 90) {
+    if (!chicken.classList.contains('scared') && !chicken.classList.contains('beingEaten')) {
+      chicken.className = 'scared';
+    }
+  } else {
+    if (chicken.classList.contains('scared')) {
+      chicken.className = 'stopped';
+    }
+  }
+
+  faceWrap.classList.toggle('near', d < farDist && d >= nearDist);
+
+  if (d < nearDist) {
     eat();
   }
 }
 
 // ─── EAT ─────────────────────────────────────────────────
 function eat() {
+  if (state !== 'stopped') return;
   state = 'eating';
   dragActive = false;
   faceWrap.classList.remove('near');
   faceWrap.classList.add('eating');
-  mouth.className = '';
-  void mouth.offsetWidth;
-  mouth.classList.add('chomp');
-  chicken.style.display = 'none';
 
-  setTimeout(explode, 350);
+  // Mouth already open from proximity — slam it to 1
+  mouthTarget = 1;
+
+  // Animate chicken flying into the mouth
+  const mouthWX = faceX + R;
+  const mouthWY = faceY + SIZE * 0.76;
+  const cLeft   = parseFloat(chicken.style.left);
+  const cTop    = parseFloat(chicken.style.top);
+  const dx      = mouthWX - (cLeft + 40);
+  const dy      = mouthWY - (cTop + 40);
+
+  chicken.className = 'beingEaten';
+  chicken.style.transition = 'transform 0.32s ease-in, opacity 0.32s ease-in';
+  chicken.style.transform  = `translate(${dx}px, ${dy}px) scale(0.05)`;
+  chicken.style.opacity    = '0';
+
+  // After chicken reaches mouth: snap shut then explode
+  setTimeout(() => {
+    chicken.style.display = 'none';
+    // Chomp: slam shut
+    mouthTarget = 0;
+    setTimeout(() => {
+      // Burst back open for the explosion
+      mouthTarget = 0.9;
+      explode();
+    }, 180);
+  }, 340);
 }
 
 // ─── EXPLODE ─────────────────────────────────────────────
 function explode() {
   state = 'exploding';
   faceWrap.classList.remove('eating');
-  mouth.className = '';
-  mouth.classList.add('open');
 
   score++;
   scoreNum.textContent = score;
 
-  const bx = faceX + 65, by = faceY + 65;
+  const bx = faceX + R, by = faceY + R;
 
-  // Main boom
   addEl('div', 'bigBoom', { left: (bx - 45) + 'px', top: (by - 45) + 'px' }, '💥');
 
-  // Feathers
   const featherEmojis = ['🪶','🪶','🪶','✨','⭐','🔥','💫'];
   for (let i = 0; i < 14; i++) {
     const angle = (i / 14) * Math.PI * 2;
-    const dist  = 80 + Math.random() * 140;
-    const el = addEl('div', 'feather', {
-      left: (bx - 14) + 'px',
-      top:  (by - 14) + 'px',
+    const dist  = 90 + Math.random() * 150;
+    addEl('div', 'feather', {
+      left: (bx - 14) + 'px', top: (by - 14) + 'px',
       '--tx': (Math.cos(angle) * dist) + 'px',
       '--ty': (Math.sin(angle) * dist) + 'px',
       '--rot': (Math.random() * 720 - 360) + 'deg',
@@ -495,16 +614,14 @@ function explode() {
     }, featherEmojis[i % featherEmojis.length]);
   }
 
-  // Sparks
   const sparkColors = ['#ff0','#ff6600','#ff0000','#fff','#ffd700'];
-  for (let i = 0; i < 22; i++) {
+  for (let i = 0; i < 24; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const dist  = 40 + Math.random() * 120;
+    const dist  = 40 + Math.random() * 130;
     addEl('div', 'spark', {
-      left: (bx - 5) + 'px',
-      top:  (by - 5) + 'px',
-      width: (6 + Math.random() * 10) + 'px',
-      height: (6 + Math.random() * 10) + 'px',
+      left: (bx - 5) + 'px', top: (by - 5) + 'px',
+      width: (6 + Math.random() * 12) + 'px',
+      height: (6 + Math.random() * 12) + 'px',
       background: sparkColors[Math.floor(Math.random() * sparkColors.length)],
       '--tx': (Math.cos(angle) * dist) + 'px',
       '--ty': (Math.sin(angle) * dist) + 'px',
@@ -512,18 +629,16 @@ function explode() {
     });
   }
 
-  // Score popup
-  const labels = ['NOM!','CHOMPED!','DEVOURED!','DELICIOUS!','FEAST!'];
+  const labels = ['NOM!', 'CHOMPED!', 'DEVOURED!', 'DELICIOUS!', 'FEAST!'];
   addEl('div', 'comboText',
     { left: (bx - 80) + 'px', top: (by - 40) + 'px', width: '200px', textAlign: 'center' },
     labels[Math.floor(Math.random() * labels.length)]
   );
 
-  // Cleanup & reset
   setTimeout(() => {
     expLayer.innerHTML = '';
     resetRound();
-  }, 1100);
+  }, 1200);
 }
 
 function addEl(tag, cls, styles, text) {
@@ -542,16 +657,17 @@ function addEl(tag, cls, styles, text) {
 function resetRound() {
   state = 'idle';
   chicken.className = '';
-  chicken.style.display = 'none';
+  chicken.style.display    = 'none';
+  chicken.style.transform  = '';
+  chicken.style.opacity    = '1';
+  chicken.style.transition = '';
   launchBtn.disabled = false;
   hint.textContent = 'Click the button to send a chicken running!';
   dragArrow.style.display = 'block';
-  mouth.className = '';
-  mouth.classList.add('open');
+  mouthTarget = 0.18; // back to resting open
 
-  // Return face to left side
   faceX = 80;
-  faceY = window.innerHeight * .5 - 65;
+  faceY = window.innerHeight * .5 - R;
   placeFace(faceX, faceY);
 }
 </script>
