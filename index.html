@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chicken Eating Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Arial Black', Arial, sans-serif;
+      background: #000;
+    }
+
+    /* ─── UPLOAD SCREEN ─── */
+    #uploadScreen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a4a1a 0%, #0a1a0a 100%);
+      z-index: 9999;
+      gap: 18px;
+    }
+    #uploadScreen h1 {
+      font-size: 3rem;
+      color: #ffe600;
+      text-shadow: 0 0 20px #ff6600, 2px 2px 0 #8B4500;
+      letter-spacing: 2px;
+    }
+    #uploadScreen p {
+      color: #ddd;
+      font-size: 1.1rem;
+    }
+    #uploadScreen label {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #ff4500;
+      color: #fff;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+      box-shadow: 0 4px 16px rgba(255,69,0,.6);
+      transition: transform .1s;
+    }
+    #uploadScreen label:hover { transform: scale(1.05); }
+    #photoInput { display: none; }
+
+    /* ─── GAME AREA ─── */
+    #game {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      background: linear-gradient(180deg, #87CEEB 0%, #c9eaf7 55%, #6ab04c 55%, #4a8c25 100%);
+      overflow: hidden;
+    }
+
+    /* Grass blades */
+    #game::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 45%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 18px,
+        rgba(0,0,0,.06) 18px, rgba(0,0,0,.06) 20px
+      );
+      pointer-events: none;
+    }
+
+    /* Clouds */
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+      opacity: .85;
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    /* ─── HUD ─── */
+    #hud {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      z-index: 100;
+    }
+    #launchBtn {
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      background: linear-gradient(145deg, #ff4500, #cc2200);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: 0 5px 18px rgba(255,69,0,.55);
+      transition: transform .1s, box-shadow .1s;
+      text-shadow: 1px 1px 2px rgba(0,0,0,.4);
+    }
+    #launchBtn:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 7px 22px rgba(255,69,0,.7); }
+    #launchBtn:active:not(:disabled) { transform: scale(.97); }
+    #launchBtn:disabled { background: #666; box-shadow: none; cursor: default; }
+
+    #scoreBox {
+      padding: 10px 22px;
+      background: rgba(0,0,0,.45);
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 12px;
+      color: #ffe600;
+      font-size: 1.3rem;
+      font-weight: 900;
+      text-shadow: 0 0 8px #ff6600;
+    }
+
+    #hint {
+      position: absolute;
+      top: 82px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,.9);
+      font-size: 1rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,.6);
+      background: rgba(0,0,0,.25);
+      padding: 6px 18px;
+      border-radius: 20px;
+      z-index: 100;
+      white-space: nowrap;
+      transition: opacity .4s;
+    }
+
+    /* ─── CHICKEN ─── */
+    #chicken {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      display: none;
+      z-index: 50;
+      user-select: none;
+      pointer-events: none;
+      transform-origin: center bottom;
+    }
+    #chicken svg { width: 100%; height: 100%; }
+    #chicken.running { animation: bobRun .18s steps(1) infinite; }
+    @keyframes bobRun {
+      0%   { transform: translateY(0px) scaleX(1); }
+      50%  { transform: translateY(-6px) scaleX(1); }
+    }
+    #chicken.stopped {
+      animation: chickenIdle .6s ease-in-out infinite alternate;
+      transform: scale(1.15);
+    }
+    @keyframes chickenIdle {
+      from { transform: scale(1.15) rotate(-3deg); }
+      to   { transform: scale(1.15) rotate(3deg); }
+    }
+
+    /* ─── PLAYER FACE ─── */
+    #faceWrap {
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      cursor: grab;
+      z-index: 60;
+      user-select: none;
+      touch-action: none;
+    }
+    #faceWrap:active { cursor: grabbing; }
+
+    #faceCircle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+      position: relative;
+      background-size: 200%;
+      background-position: center 10%;
+      background-repeat: no-repeat;
+      transition: border-color .2s;
+    }
+    #faceWrap.near #faceCircle  { border-color: #ffe600; box-shadow: 0 0 24px #ffe600; }
+    #faceWrap.eating #faceCircle { border-color: #ff4500; box-shadow: 0 0 30px #ff4500; }
+
+    /* Open-mouth overlay */
+    #mouth {
+      position: absolute;
+      bottom: 16%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 0px;
+      background: #700;
+      border-radius: 0 0 24px 24px;
+      overflow: hidden;
+      transition: height .15s;
+      pointer-events: none;
+    }
+    #mouth.open { height: 22px; }
+    #mouth.chomp { height: 32px; animation: chomp .12s steps(1) 3; }
+    @keyframes chomp {
+      0%,100% { height: 32px; }
+      50%      { height: 4px; }
+    }
+    /* tongue */
+    #mouth::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 8px;
+      background: #e06060;
+      border-radius: 0 0 10px 10px;
+    }
+
+    /* ─── DRAG LABEL ─── */
+    #dragArrow {
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      transform: translateX(-50%);
+      color: #ffe600;
+      font-size: 1.5rem;
+      animation: bounce .5s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes bounce { from { top: -38px; } to { top: -28px; } }
+
+    /* ─── EXPLOSION LAYER ─── */
+    #explosionLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .spark {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkFly var(--dur,.7s) ease-out forwards;
+    }
+    @keyframes sparkFly {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx),var(--ty)) scale(0); opacity: 0; }
+    }
+    .bigBoom {
+      position: absolute;
+      font-size: 90px;
+      pointer-events: none;
+      animation: boomAnim .7s ease-out forwards;
+    }
+    @keyframes boomAnim {
+      0%   { transform: scale(.3) rotate(-15deg); opacity: 1; }
+      60%  { transform: scale(2.2) rotate(10deg); opacity: 1; }
+      100% { transform: scale(3)   rotate(20deg); opacity: 0; }
+    }
+    .feather {
+      position: absolute;
+      font-size: 28px;
+      pointer-events: none;
+      animation: featherFly var(--dur,.9s) ease-out forwards;
+    }
+    @keyframes featherFly {
+      0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--tx),var(--ty)) rotate(var(--rot,360deg)); opacity: 0; }
+    }
+
+    /* ─── COMBO POPUP ─── */
+    .comboText {
+      position: absolute;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffe600;
+      text-shadow: 2px 2px 0 #c00, 0 0 20px #ff6600;
+      pointer-events: none;
+      z-index: 300;
+      animation: comboRise 1s ease-out forwards;
+    }
+    @keyframes comboRise {
+      0%   { transform: translateY(0) scale(.5); opacity: 1; }
+      60%  { transform: translateY(-60px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-120px) scale(1); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ UPLOAD SCREEN ═══ -->
+<div id="uploadScreen">
+  <h1>🐔 CHICKEN EATER 🐔</h1>
+  <p>Upload your photo to become the predator</p>
+  <label for="photoInput">📷 Choose Your Photo</label>
+  <input type="file" id="photoInput" accept="image/*" />
+  <p style="color:#888;font-size:.85rem">Photo stays 100% local — never uploaded anywhere</p>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="game">
+
+  <!-- Clouds -->
+  <div class="cloud" style="width:160px;height:50px;top:8%;left:10%">
+    <div style="position:absolute;width:80px;height:80px;top:-40px;left:20px;background:white;border-radius:50%"></div>
+    <div style="position:absolute;width:60px;height:60px;top:-30px;left:70px;background:white;border-radius:50%"></div>
+  </div>
+  <div class="cloud" style="width:120px;height:40px;top:15%;left:60%">
+    <div style="position:absolute;width:65px;height:65px;top:-32px;left:15px;background:white;border-radius:50%"></div>
+    <div style="position:absolute;width:50px;height:50px;top:-24px;left:60px;background:white;border-radius:50%"></div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <button id="launchBtn" onclick="launchChicken()">🐔 Launch Chicken!</button>
+    <div id="scoreBox">Score: <span id="scoreNum">0</span></div>
+  </div>
+  <div id="hint">Click the button to send a chicken running!</div>
+
+  <!-- Chicken SVG -->
+  <div id="chicken">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- body -->
+      <ellipse cx="50" cy="62" rx="28" ry="22" fill="#f5c842"/>
+      <!-- head -->
+      <circle cx="78" cy="40" r="16" fill="#f5c842"/>
+      <!-- eye -->
+      <circle cx="84" cy="36" r="3.5" fill="#222"/>
+      <circle cx="85.2" cy="34.8" r="1" fill="white"/>
+      <!-- beak top -->
+      <polygon points="96,40 88,37 88,40" fill="#e07b00"/>
+      <!-- beak bottom -->
+      <polygon points="96,42 88,40 88,44" fill="#c06000"/>
+      <!-- comb -->
+      <ellipse cx="72" cy="26" rx="5" ry="7" fill="#e83030"/>
+      <ellipse cx="78" cy="24" rx="4" ry="6" fill="#e83030"/>
+      <!-- wattle -->
+      <ellipse cx="90" cy="50" rx="4" ry="6" fill="#e83030"/>
+      <!-- wing -->
+      <ellipse cx="44" cy="60" rx="14" ry="9" fill="#d4a800" transform="rotate(-15 44 60)"/>
+      <!-- tail feathers -->
+      <ellipse cx="22" cy="52" rx="8" ry="5" fill="#c49000" transform="rotate(-40 22 52)"/>
+      <ellipse cx="20" cy="58" rx="8" ry="5" fill="#d4a800" transform="rotate(-55 20 58)"/>
+      <!-- legs group (toggled for running) -->
+      <g id="legsA">
+        <line x1="46" y1="82" x2="38" y2="96" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+        <line x1="54" y1="82" x2="62" y2="98" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+        <line x1="38" y1="96" x2="28" y2="96" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+        <line x1="62" y1="98" x2="72" y2="98" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Player face -->
+  <div id="faceWrap">
+    <div id="dragArrow">👆</div>
+    <div id="faceCircle">
+      <div id="mouth"></div>
+    </div>
+  </div>
+
+  <!-- Explosion canvas -->
+  <div id="explosionLayer"></div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let score = 0;
+let state = 'idle'; // idle | running | stopped | eating | exploding
+let chickenStopX = 0, chickenStopY = 0;
+let faceX = 80, faceY = 0;
+let dragActive = false, ox = 0, oy = 0;
+let rafId = null;
+let chickenCurrentX = -100;
+
+// ─── ELEMENTS ────────────────────────────────────────────
+const game       = document.getElementById('game');
+const chicken    = document.getElementById('chicken');
+const faceWrap   = document.getElementById('faceWrap');
+const faceCircle = document.getElementById('faceCircle');
+const mouth      = document.getElementById('mouth');
+const launchBtn  = document.getElementById('launchBtn');
+const hint       = document.getElementById('hint');
+const scoreNum   = document.getElementById('scoreNum');
+const expLayer   = document.getElementById('explosionLayer');
+const dragArrow  = document.getElementById('dragArrow');
+
+// ─── PHOTO UPLOAD ────────────────────────────────────────
+document.getElementById('photoInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  faceCircle.style.backgroundImage = `url(${url})`;
+  document.getElementById('uploadScreen').style.display = 'none';
+  game.style.display = 'block';
+  faceY = window.innerHeight * 0.5 - 65;
+  placeFace(faceX, faceY);
+  faceWrap.style.display = 'block';
+  mouth.classList.add('open');
+});
+
+// ─── LAUNCH ──────────────────────────────────────────────
+function launchChicken() {
+  if (state !== 'idle') return;
+  state = 'running';
+  launchBtn.disabled = true;
+  hint.textContent = 'The chicken is running! 🏃';
+  dragArrow.style.display = 'none';
+
+  const minY = window.innerHeight * 0.48;
+  const maxY = window.innerHeight * 0.80;
+  chickenStopY = minY + Math.random() * (maxY - minY);
+  chickenStopX = window.innerWidth * (.35 + Math.random() * .48);
+
+  chickenCurrentX = -90;
+  chicken.style.left = chickenCurrentX + 'px';
+  chicken.style.top  = (chickenStopY - 40) + 'px';
+  chicken.style.display = 'block';
+  chicken.classList.add('running');
+  chicken.style.transform = '';
+
+  runChicken();
+}
+
+function runChicken() {
+  const speed = 5 + score * 0.4; // gets faster as score grows
+  chickenCurrentX += speed;
+  chicken.style.left = chickenCurrentX + 'px';
+
+  if (chickenCurrentX < chickenStopX) {
+    rafId = requestAnimationFrame(runChicken);
+  } else {
+    chickenCurrentX = chickenStopX;
+    chicken.style.left = chickenStopX + 'px';
+    chicken.classList.remove('running');
+    chicken.classList.add('stopped');
+    state = 'stopped';
+    hint.textContent = 'Drag the face — feed him that chicken! 🍗';
+    dragArrow.style.display = 'block';
+  }
+}
+
+// ─── DRAG ────────────────────────────────────────────────
+function placeFace(x, y) {
+  faceX = x; faceY = y;
+  faceWrap.style.left = faceX + 'px';
+  faceWrap.style.top  = faceY + 'px';
+}
+
+faceWrap.addEventListener('pointerdown', e => {
+  if (state !== 'stopped') return;
+  dragActive = true;
+  faceWrap.setPointerCapture(e.pointerId);
+  const r = faceWrap.getBoundingClientRect();
+  ox = e.clientX - r.left;
+  oy = e.clientY - r.top;
+});
+
+faceWrap.addEventListener('pointermove', e => {
+  if (!dragActive) return;
+  placeFace(e.clientX - ox, e.clientY - oy);
+  checkProximity();
+});
+
+faceWrap.addEventListener('pointerup', () => { dragActive = false; });
+
+function checkProximity() {
+  if (state !== 'stopped') return;
+
+  const fx = faceX + 65, fy = faceY + 65;
+  const cx = chickenStopX + 40, cy = chickenStopY - 5;
+  const d  = Math.hypot(fx - cx, fy - cy);
+
+  if (d < 55) {
+    faceWrap.classList.add('near');
+  } else {
+    faceWrap.classList.remove('near');
+  }
+
+  if (d < 42) {
+    eat();
+  }
+}
+
+// ─── EAT ─────────────────────────────────────────────────
+function eat() {
+  state = 'eating';
+  dragActive = false;
+  faceWrap.classList.remove('near');
+  faceWrap.classList.add('eating');
+  mouth.className = '';
+  void mouth.offsetWidth;
+  mouth.classList.add('chomp');
+  chicken.style.display = 'none';
+
+  setTimeout(explode, 350);
+}
+
+// ─── EXPLODE ─────────────────────────────────────────────
+function explode() {
+  state = 'exploding';
+  faceWrap.classList.remove('eating');
+  mouth.className = '';
+  mouth.classList.add('open');
+
+  score++;
+  scoreNum.textContent = score;
+
+  const bx = faceX + 65, by = faceY + 65;
+
+  // Main boom
+  addEl('div', 'bigBoom', { left: (bx - 45) + 'px', top: (by - 45) + 'px' }, '💥');
+
+  // Feathers
+  const featherEmojis = ['🪶','🪶','🪶','✨','⭐','🔥','💫'];
+  for (let i = 0; i < 14; i++) {
+    const angle = (i / 14) * Math.PI * 2;
+    const dist  = 80 + Math.random() * 140;
+    const el = addEl('div', 'feather', {
+      left: (bx - 14) + 'px',
+      top:  (by - 14) + 'px',
+      '--tx': (Math.cos(angle) * dist) + 'px',
+      '--ty': (Math.sin(angle) * dist) + 'px',
+      '--rot': (Math.random() * 720 - 360) + 'deg',
+      '--dur': (.5 + Math.random() * .6) + 's',
+    }, featherEmojis[i % featherEmojis.length]);
+  }
+
+  // Sparks
+  const sparkColors = ['#ff0','#ff6600','#ff0000','#fff','#ffd700'];
+  for (let i = 0; i < 22; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 40 + Math.random() * 120;
+    addEl('div', 'spark', {
+      left: (bx - 5) + 'px',
+      top:  (by - 5) + 'px',
+      width: (6 + Math.random() * 10) + 'px',
+      height: (6 + Math.random() * 10) + 'px',
+      background: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+      '--tx': (Math.cos(angle) * dist) + 'px',
+      '--ty': (Math.sin(angle) * dist) + 'px',
+      '--dur': (.3 + Math.random() * .5) + 's',
+    });
+  }
+
+  // Score popup
+  const labels = ['NOM!','CHOMPED!','DEVOURED!','DELICIOUS!','FEAST!'];
+  addEl('div', 'comboText',
+    { left: (bx - 80) + 'px', top: (by - 40) + 'px', width: '200px', textAlign: 'center' },
+    labels[Math.floor(Math.random() * labels.length)]
+  );
+
+  // Cleanup & reset
+  setTimeout(() => {
+    expLayer.innerHTML = '';
+    resetRound();
+  }, 1100);
+}
+
+function addEl(tag, cls, styles, text) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  for (const [k, v] of Object.entries(styles)) {
+    if (k.startsWith('--')) el.style.setProperty(k, v);
+    else el.style[k] = v;
+  }
+  if (text !== undefined) el.textContent = text;
+  expLayer.appendChild(el);
+  return el;
+}
+
+// ─── RESET ───────────────────────────────────────────────
+function resetRound() {
+  state = 'idle';
+  chicken.className = '';
+  chicken.style.display = 'none';
+  launchBtn.disabled = false;
+  hint.textContent = 'Click the button to send a chicken running!';
+  dragArrow.style.display = 'block';
+  mouth.className = '';
+  mouth.classList.add('open');
+
+  // Return face to left side
+  faceX = 80;
+  faceY = window.innerHeight * .5 - 65;
+  placeFace(faceX, faceY);
+}
+</script>
+</body>
+</html>
