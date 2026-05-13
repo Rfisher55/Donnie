@@ -15,49 +15,13 @@
       background: #000;
     }
 
-    /* ─── UPLOAD SCREEN ─── */
-    #uploadScreen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(ellipse at center, #1a4a1a 0%, #0a1a0a 100%);
-      z-index: 9999;
-      gap: 18px;
-    }
-    #uploadScreen h1 {
-      font-size: 3rem;
-      color: #ffe600;
-      text-shadow: 0 0 20px #ff6600, 2px 2px 0 #8B4500;
-      letter-spacing: 2px;
-    }
-    #uploadScreen p {
-      color: #ddd;
-      font-size: 1.1rem;
-    }
-    #uploadScreen label {
-      display: inline-block;
-      padding: 14px 32px;
-      background: #ff4500;
-      color: #fff;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 1.1rem;
-      font-weight: bold;
-      box-shadow: 0 4px 16px rgba(255,69,0,.6);
-      transition: transform .1s;
-    }
-    #uploadScreen label:hover { transform: scale(1.05); }
-    #photoInput { display: none; }
 
     /* ─── GAME AREA ─── */
     #game {
       position: relative;
       width: 100vw;
       height: 100vh;
-      display: none;
+      display: block;
       background: linear-gradient(180deg, #87CEEB 0%, #c9eaf7 55%, #6ab04c 55%, #4a8c25 100%);
       overflow: hidden;
     }
@@ -307,15 +271,6 @@
 </head>
 <body>
 
-<!-- ═══ UPLOAD SCREEN ═══ -->
-<div id="uploadScreen">
-  <h1>🐔 CHICKEN EATER 🐔</h1>
-  <p>Upload your photo to become the predator</p>
-  <label for="photoInput">📷 Choose Your Photo</label>
-  <input type="file" id="photoInput" accept="image/*" />
-  <p style="color:#888;font-size:.85rem">Photo stays 100% local — never uploaded anywhere</p>
-</div>
-
 <!-- ═══ GAME ═══ -->
 <div id="game">
 
@@ -404,14 +359,9 @@ const scoreNum   = document.getElementById('scoreNum');
 const expLayer   = document.getElementById('explosionLayer');
 const dragArrow  = document.getElementById('dragArrow');
 
-// ─── PHOTO UPLOAD ────────────────────────────────────────
-document.getElementById('photoInput').addEventListener('change', function () {
-  const file = this.files[0];
-  if (!file) return;
-  const url = URL.createObjectURL(file);
-  faceCircle.style.backgroundImage = `url(${url})`;
-  document.getElementById('uploadScreen').style.display = 'none';
-  game.style.display = 'block';
+// ─── AUTO-LOAD PHOTO ─────────────────────────────────────
+window.addEventListener('load', () => {
+  faceCircle.style.backgroundImage = 'url(photo.jpg)';
   faceY = window.innerHeight * 0.5 - 65;
   placeFace(faceX, faceY);
   faceWrap.style.display = 'block';
