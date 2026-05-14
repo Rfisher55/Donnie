@@ -842,8 +842,8 @@
     }
     #tcmDark {
       position: absolute; inset: 0; background: #000; pointer-events: none; z-index: 4;
-      -webkit-mask-image: radial-gradient(circle 150px at 50% 80%, transparent 0%, black 70%);
-      mask-image: radial-gradient(circle 150px at 50% 80%, transparent 0%, black 70%);
+      -webkit-mask-image: radial-gradient(circle 220px at 50% 80%, transparent 0%, black 70%);
+      mask-image: radial-gradient(circle 220px at 50% 80%, transparent 0%, black 70%);
     }
     #tcmPlayer {
       position: absolute; width: 20px; height: 20px; border-radius: 50%;
@@ -852,11 +852,17 @@
     }
     #tcmLeatherface { position: absolute; width: 80px; height: 120px; z-index: 5; pointer-events: none; }
     #tcmExit {
-      position: absolute; width: 54px; height: 86px;
+      position: absolute; width: 64px; height: 96px;
       background: linear-gradient(180deg, #4a2800, #1a0c00); border: 3px solid #774400;
-      border-radius: 8px 8px 0 0; z-index: 3; cursor: pointer;
+      border-radius: 8px 8px 0 0; z-index: 5; cursor: pointer;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #cc7700; font-size: 0.55rem; font-weight: 900; text-align: center; line-height: 1.5;
+      color: #88ff88; font-size: 0.6rem; font-weight: 900; text-align: center; line-height: 1.5;
+      box-shadow: 0 0 18px 6px rgba(0,255,80,.35), inset 0 0 20px rgba(0,200,60,.15);
+      animation: exitPulse 1.8s ease-in-out infinite alternate;
+    }
+    @keyframes exitPulse {
+      from { box-shadow: 0 0 14px 4px rgba(0,255,80,.25), inset 0 0 14px rgba(0,200,60,.1); }
+      to   { box-shadow: 0 0 32px 12px rgba(0,255,80,.55), inset 0 0 28px rgba(0,220,80,.3); }
     }
     #tcmHUD {
       position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
@@ -1199,7 +1205,7 @@
       <circle cx="48" cy="20" r="1.8" fill="#660000"/>
       <path d="M30,30 Q40,34 50,30" fill="none" stroke="#111" stroke-width="2"/>
     </svg>
-    <div id="tcmExit">EXIT<br>▲</div>
+    <div id="tcmExit">🚪<br>EXIT</div>
     <div id="tcmDark"></div>
     <div id="tcmHUD">⚡ 75s — FIND THE EXIT!</div>
     <div id="tcmMsg">
@@ -2340,7 +2346,7 @@ function catchGollum() {
 const tcmGame = document.getElementById('tcmGame');
 const tcmDark = document.getElementById('tcmDark');
 let tcmPX, tcmPY, tcmLX, tcmLY, tcmAlive, tcmTimeLeft2, tcmRafId2, tcmTickId, tcmJumpLocked;
-const TCM_SPEED = 3, TCM_LF_SPEED = 1.55, TCM_CATCH = 55, TCM_EXIT = 48;
+const TCM_SPEED = 3, TCM_LF_SPEED = 1.1, TCM_CATCH = 48, TCM_EXIT = 65;
 let tcmKeys2 = {};
 
 function startTCMGame() {
@@ -2352,7 +2358,7 @@ function startTCMGame() {
 
 function tcmStartRound() {
   tcmAlive = true; tcmJumpLocked = false;
-  tcmTimeLeft2 = 75;
+  tcmTimeLeft2 = 120;
   const W = window.innerWidth, H = window.innerHeight;
   tcmPX = W * 0.5; tcmPY = H * 0.82;
   tcmLX = W * 0.1; tcmLY = H * 0.12;
@@ -2423,7 +2429,7 @@ function tcmLoop() {
 
 function tcmUpdateDark() {
   const pct = `${tcmPX}px ${tcmPY}px`;
-  const mask = `radial-gradient(circle 150px at ${pct}, transparent 0%, black 72%)`;
+  const mask = `radial-gradient(circle 220px at ${pct}, transparent 0%, black 72%)`;
   tcmDark.style.maskImage = mask;
   tcmDark.style.webkitMaskImage = mask;
 }
@@ -2433,7 +2439,20 @@ function tcmTouchExit() { if (tcmAlive) tcmEscape(); }
 function tcmTick() {
   if (!tcmAlive) return;
   tcmTimeLeft2--;
-  document.getElementById('tcmHUD').textContent = `⚡ ${tcmTimeLeft2}s — FIND THE EXIT!`;
+  const exit = document.getElementById('tcmExit');
+  const er = exit.getBoundingClientRect();
+  const exCX = er.left + 32, exCY = er.top + 48;
+  let hint = 'FIND THE EXIT!';
+  if (tcmTimeLeft2 <= 90) {
+    const dx = exCX - tcmPX, dy = exCY - tcmPY;
+    const dirs = [];
+    if (dy < -60) dirs.push('UP');
+    if (dy > 60)  dirs.push('DOWN');
+    if (dx < -60) dirs.push('LEFT');
+    if (dx > 60)  dirs.push('RIGHT');
+    if (dirs.length) hint = `EXIT → ${dirs.join('-')}`;
+  }
+  document.getElementById('tcmHUD').textContent = `⚡ ${tcmTimeLeft2}s — ${hint}`;
   if (tcmTimeLeft2 <= 0) tcmDie();
 }
 
