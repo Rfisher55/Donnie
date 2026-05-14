@@ -888,6 +888,30 @@
       animation: tcmFlick .09s steps(1) infinite;
     }
     @keyframes tcmFlick { 0%,49%{ opacity: 1; } 50%,99%{ opacity: 0; } }
+    /* ─── MILK SCREEN ─── */
+    #milkScreen { position: fixed; inset: 0; display: none; z-index: 1400; overflow: hidden; background: #fffaf0; }
+    #milkCanvas { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+    #milkCowWrap {
+      position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%);
+      z-index: 2; pointer-events: none; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+    }
+    #milkCowWrap svg { animation: cowBob .4s ease-in-out infinite alternate; }
+    @keyframes cowBob {
+      from { transform: translateY(0) rotate(-.6deg); }
+      to   { transform: translateY(-8px) rotate(.6deg); }
+    }
+    #milkHint {
+      position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(1.1rem, 3.8vw, 2rem); font-weight: 900; color: #1a3a88;
+      text-shadow: 2px 2px 0 #99bbdd; white-space: nowrap; pointer-events: none; z-index: 3; display: none;
+    }
+    #milkProgressWrap {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      width: clamp(200px, 55vw, 460px); height: 22px; background: rgba(0,80,200,.12);
+      border-radius: 11px; border: 2px solid rgba(0,80,200,.25); overflow: hidden; z-index: 3; display: none;
+    }
+    #milkProgressBar { height: 100%; width: 0%; background: linear-gradient(90deg, #44aaff, #88ffee); border-radius: 9px; transition: width 0.12s; }
+    .milkSpray { position: fixed; background: rgba(255,252,244,.88); border-radius: 50%; pointer-events: none; z-index: 1401; }
   </style>
 </head>
 <body>
@@ -1237,6 +1261,43 @@
         <ellipse cx="168" cy="200" rx="26" ry="9" fill="#cc0000" opacity="0.8" transform="rotate(-15 168 200)"/>
       </svg>
     </div>
+  </div>
+
+  <!-- ── Milk Screen ── -->
+  <div id="milkScreen">
+    <canvas id="milkCanvas"></canvas>
+    <div id="milkCowWrap">
+      <svg viewBox="0 0 200 130" width="220" height="143" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+        <ellipse cx="90" cy="78" rx="68" ry="40" fill="white" stroke="#444" stroke-width="2.5"/>
+        <ellipse cx="76" cy="65" rx="22" ry="16" fill="#333" transform="rotate(-10 76 65)"/>
+        <ellipse cx="106" cy="89" rx="16" ry="11" fill="#333"/>
+        <ellipse cx="162" cy="62" rx="34" ry="28" fill="white" stroke="#444" stroke-width="2.5"/>
+        <ellipse cx="186" cy="70" rx="16" ry="13" fill="#ffccaa" stroke="#cc9977" stroke-width="1.5"/>
+        <circle cx="181" cy="72" r="3.5" fill="#aa6644"/><circle cx="190" cy="72" r="3.5" fill="#aa6644"/>
+        <circle cx="155" cy="53" r="8" fill="white" stroke="#333" stroke-width="1.5"/>
+        <circle cx="157" cy="54" r="4.5" fill="#222"/><circle cx="158" cy="52" r="1.8" fill="white"/>
+        <line x1="151" y1="47" x2="148" y2="44" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="155" y1="45" x2="154" y2="42" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="159" y1="46" x2="159" y2="43" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
+        <ellipse cx="135" cy="38" rx="10" ry="15" fill="white" stroke="#444" stroke-width="2"/>
+        <ellipse cx="135" cy="38" rx="6" ry="9" fill="#ffccaa"/>
+        <path d="M138,26 Q130,12 140,10" stroke="#c8a040" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <path d="M23,72 Q6,62 10,49 Q14,40 8,32" stroke="#444" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="7" cy="30" rx="6" ry="8" fill="#555"/>
+        <rect x="42" y="112" width="14" height="20" rx="6" fill="white" stroke="#444" stroke-width="2"/>
+        <rect x="64" y="112" width="14" height="20" rx="6" fill="white" stroke="#444" stroke-width="2"/>
+        <rect x="96" y="112" width="14" height="20" rx="6" fill="white" stroke="#444" stroke-width="2"/>
+        <rect x="118" y="112" width="14" height="20" rx="6" fill="white" stroke="#444" stroke-width="2"/>
+        <ellipse cx="74" cy="116" rx="24" ry="13" fill="#ffaaaa" stroke="#cc8888" stroke-width="1.5"/>
+        <circle cx="63" cy="127" r="5.5" fill="#ffbbbb" stroke="#cc7777" stroke-width="1.2"/>
+        <circle cx="79" cy="129" r="5.5" fill="#ffbbbb" stroke="#cc7777" stroke-width="1.2"/>
+        <path d="M200,65 Q220,58 238,61" stroke="rgba(200,240,255,.9)" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <path d="M200,70 Q222,72 240,67" stroke="rgba(200,240,255,.8)" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <path d="M200,61 Q218,52 234,55" stroke="rgba(200,240,255,.7)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div id="milkHint">🥛 WIPE THE MILK OFF THE SCREEN! 🥛</div>
+    <div id="milkProgressWrap"><div id="milkProgressBar"></div></div>
   </div>
 
   <!-- ── Egg Splat ── -->
@@ -1859,6 +1920,7 @@ function fullReset() {
   if (typeof strobeOverlay !== 'undefined') strobeOverlay.style.opacity = '0';
   if (typeof gollumWrap !== 'undefined') { gollumWrap.style.display = 'none'; cancelAnimationFrame(gRafId); document.removeEventListener('mousemove', moveNet); netCursor.style.display = 'none'; }
   if (typeof tcmGame !== 'undefined') { tcmGame.style.display = 'none'; tcmAlive = false; cancelAnimationFrame(tcmRafId2); clearInterval(tcmTickId); tcmGame.style.transform = ''; document.removeEventListener('keydown', tcmKD); document.removeEventListener('keyup', tcmKU); }
+  if (typeof milkScreen !== 'undefined') { milkScreen.style.display = 'none'; milkWipeActive = false; }
   firstEatDone = false;
   score = 0;
   scoreNum.textContent = '0';
@@ -2496,12 +2558,157 @@ function tcmEscape() {
   tcmGame.style.transform = '';
   document.removeEventListener('keydown', tcmKD);
   document.removeEventListener('keyup', tcmKU);
-  const msg = document.getElementById('tcmMsg');
-  document.getElementById('tcmMsgText').textContent = '🚗 YOU ESCAPED!';
-  document.getElementById('tcmMsgText').style.color = '#00ff88';
-  document.getElementById('tcmMsgBtn').textContent = 'Continue...';
-  document.getElementById('tcmMsgBtn').onclick = () => { tcmGame.style.display = 'none'; fullReset(); };
-  msg.style.display = 'flex';
+  tcmGame.style.display = 'none';
+  startMilkSequence();
+}
+
+// ─── MILK SCREEN ─────────────────────────────────────────
+const milkScreen = document.getElementById('milkScreen');
+let milkWipeActive = false;
+let milkSweepCount = 0;
+
+function startMilkSequence() {
+  milkScreen.style.display = 'block';
+  milkWipeActive = false;
+  milkSweepCount = 0;
+  document.getElementById('milkHint').style.display = 'none';
+  document.getElementById('milkProgressWrap').style.display = 'none';
+  document.getElementById('milkProgressBar').style.width = '0%';
+  document.getElementById('milkCowWrap').style.display = 'block';
+
+  // Spray particles from cow
+  const cowWrap = document.getElementById('milkCowWrap');
+  setTimeout(() => {
+    const cowRect = cowWrap.getBoundingClientRect();
+    const ox = cowRect.right - 10, oy = cowRect.top + cowRect.height * 0.3;
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => {
+        const sp = document.createElement('div');
+        sp.className = 'milkSpray';
+        const sz = 18 + Math.random() * 55;
+        const tx = Math.random() * window.innerWidth;
+        const ty = Math.random() * window.innerHeight;
+        sp.style.cssText = `width:${sz}px;height:${sz}px;left:${ox}px;top:${oy}px;`;
+        document.body.appendChild(sp);
+        sp.animate([
+          { left: ox + 'px', top: oy + 'px', opacity: 0.9, transform: 'scale(0.2)' },
+          { left: tx + 'px', top: ty + 'px', opacity: 0.85, transform: `scale(${1 + Math.random()})` }
+        ], { duration: 350 + Math.random() * 500, fill: 'forwards', easing: 'ease-out' });
+        setTimeout(() => sp.remove(), 950);
+      }, i * 35);
+    }
+  }, 400);
+
+  // After spray, draw milk canvas and enable wiping
+  setTimeout(() => {
+    document.getElementById('milkCowWrap').style.display = 'none';
+    milkDrawCanvas();
+    document.getElementById('milkHint').style.display = 'block';
+    document.getElementById('milkProgressWrap').style.display = 'block';
+    milkWipeActive = true;
+  }, 1900);
+}
+
+function milkDrawCanvas() {
+  const canvas = document.getElementById('milkCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  // Base cream coat
+  ctx.fillStyle = 'rgba(255,250,238,0.96)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Blobs with varying opacity for texture
+  for (let i = 0; i < 160; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const rx = 25 + Math.random() * 90;
+    const ry = rx * (0.35 + Math.random() * 0.9);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.random() * Math.PI);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+    g.addColorStop(0, 'rgba(255,253,248,1)');
+    g.addColorStop(0.7, 'rgba(255,251,242,0.92)');
+    g.addColorStop(1, 'rgba(255,248,235,0.6)');
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.restore();
+  }
+  // Drips
+  for (let i = 0; i < 70; i++) {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height * 0.75;
+    const len = 18 + Math.random() * 65;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + (Math.random() - 0.5) * 22, y + len * 0.55, x + (Math.random() - 0.5) * 12, y + len);
+    ctx.lineWidth = 3 + Math.random() * 7;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,252,246,0.9)';
+    ctx.stroke();
+  }
+
+  // Enable wipe
+  const progressBar = document.getElementById('milkProgressBar');
+  let lastX = -1, lastY = -1;
+  let checkEvery = 0;
+
+  function wipeAt(x, y) {
+    if (!milkWipeActive) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 58, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fill();
+    ctx.restore();
+    milkSweepCount++;
+    checkEvery++;
+    if (checkEvery >= 20) {
+      checkEvery = 0;
+      const pct = milkCheckClear(ctx, canvas);
+      progressBar.style.width = Math.round(pct * 100) + '%';
+      if (pct >= 0.78) { milkWipeActive = false; milkComplete(); }
+    }
+  }
+
+  function onMove(e) {
+    if (!milkWipeActive) return;
+    const x = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    const y = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    if (lastX >= 0) {
+      const steps = Math.max(1, Math.ceil(Math.hypot(x - lastX, y - lastY) / 22));
+      for (let i = 0; i <= steps; i++) wipeAt(lastX + (x - lastX) * i / steps, lastY + (y - lastY) * i / steps);
+    } else { wipeAt(x, y); }
+    lastX = x; lastY = y;
+  }
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, { passive: false });
+  canvas.addEventListener('mouseleave', () => { lastX = -1; lastY = -1; });
+}
+
+function milkCheckClear(ctx, canvas) {
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const total = Math.floor(data.length / 4);
+  const step = Math.max(1, Math.floor(total / 800));
+  let transparent = 0, sampled = 0;
+  for (let p = 0; p < total; p += step) { if (data[p * 4 + 3] < 30) transparent++; sampled++; }
+  return transparent / sampled;
+}
+
+function milkComplete() {
+  const hint = document.getElementById('milkHint');
+  hint.textContent = '✅ ALL CLEAN! 🐄 MOO!';
+  setTimeout(() => {
+    milkScreen.style.display = 'none';
+    hint.textContent = '🥛 WIPE THE MILK OFF THE SCREEN! 🥛';
+    hint.style.display = 'none';
+    document.getElementById('milkProgressWrap').style.display = 'none';
+    document.getElementById('milkProgressBar').style.width = '0%';
+    fullReset();
+  }, 1100);
 }
 
 // ─── RESET ───────────────────────────────────────────────
