@@ -369,35 +369,141 @@
       to   { transform: translate(-50%,-50%) scale(.4); opacity: 0; }
     }
 
-    /* ─── RESTART BUTTON ─── */
-    #restartBtn {
+    /* ─── PILL CHOICE ─── */
+    #pillChoice {
       position: fixed;
-      top: 58%;
-      left: 50%;
-      transform: translateX(-50%) scale(0);
-      padding: 18px 44px;
-      font-size: 1.5rem;
-      font-weight: 900;
-      background: linear-gradient(145deg, #00dd55, #009933);
-      color: white;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      box-shadow: 0 6px 24px rgba(0,200,70,.55);
-      text-shadow: 1px 1px 3px rgba(0,0,0,.3);
-      z-index: 700;
+      inset: 0;
       display: none;
-      transition: transform .1s;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 750;
+      background: rgba(0,0,0,.8);
+      backdrop-filter: blur(6px);
     }
-    #restartBtn.visible {
-      display: block;
-      animation: btnPop .4s cubic-bezier(.17,.67,.39,1.4) forwards;
+    #pillPrompt {
+      color: #fff;
+      font-size: clamp(1.4rem, 5vw, 2.6rem);
+      font-weight: 900;
+      text-shadow: 0 0 30px rgba(255,255,255,.5);
+      margin-bottom: 50px;
+      letter-spacing: .06em;
+      text-align: center;
     }
-    @keyframes btnPop {
-      from { transform: translateX(-50%) scale(0); }
-      to   { transform: translateX(-50%) scale(1); }
+    #pillRow {
+      display: flex;
+      gap: clamp(30px, 10vw, 100px);
+      align-items: center;
     }
-    #restartBtn:hover { transform: translateX(-50%) scale(1.07) !important; }
+    .pillOption {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      gap: 14px;
+      transition: transform .2s;
+    }
+    .pillOption:hover { transform: scale(1.18) rotate(-5deg); }
+    .pillOption svg { width: clamp(120px,22vw,180px); height: auto; filter: drop-shadow(0 6px 24px rgba(0,0,0,.6)); }
+    .pillLabel {
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ─── BLUE PILL FLASH ─── */
+    #bluePillFlash {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #2255ff, #000066);
+      z-index: 1100;
+    }
+    #bluePillMsg {
+      color: white;
+      font-size: clamp(1.5rem, 5vw, 3rem);
+      font-weight: 900;
+      text-align: center;
+      text-shadow: 0 0 40px rgba(100,180,255,.9);
+      line-height: 1.5;
+      padding: 0 24px;
+      animation: blueTextIn .7s .2s ease-out both;
+    }
+    @keyframes blueTextIn {
+      from { opacity: 0; transform: scale(.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ─── RUBBER ROOM ─── */
+    #rubberRoom {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 1000;
+      overflow: hidden;
+      background-color: #e2ddd0;
+      background-image:
+        radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,255,255,.6) 28%, transparent 29%) 0 0 / 60px 60px,
+        repeating-linear-gradient(0deg,  rgba(0,0,0,.07) 0, rgba(0,0,0,.07) 1px, transparent 1px, transparent 60px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0, rgba(0,0,0,.07) 1px, transparent 1px, transparent 60px);
+      box-shadow: inset 0 0 140px rgba(0,0,0,.4);
+    }
+    #roomHeader {
+      position: absolute;
+      top: 18px; left: 50%;
+      transform: translateX(-50%);
+      color: #cc0000;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+      white-space: nowrap;
+      animation: roomShake .12s ease-in-out infinite alternate;
+      z-index: 1003; pointer-events: none;
+    }
+    @keyframes roomShake {
+      from { transform: translateX(calc(-50% - 2px)) rotate(-.8deg); }
+      to   { transform: translateX(calc(-50% + 2px)) rotate(.8deg); }
+    }
+    #ratCounter {
+      position: absolute;
+      top: 65px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #333;
+      z-index: 1003; pointer-events: none;
+    }
+    #bucketArea {
+      position: absolute;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1003; pointer-events: none;
+    }
+    #bucketArea svg { width: 90px; height: 90px; }
+    #bucketLabel {
+      color: #444;
+      font-size: .85rem;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+    .rat {
+      position: absolute;
+      width: 70px;
+      height: 35px;
+      cursor: pointer;
+      z-index: 1002;
+      user-select: none;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+    }
+    .rat:hover { filter: drop-shadow(0 0 8px #ff0) brightness(1.4); }
+    .rat svg { width: 100%; height: 100%; }
 
     /* ─── RESTART CHICKEN + EGG ─── */
     #restartArea {
@@ -678,8 +784,52 @@
   <!-- ── STUPID ── -->
   <div id="stupidText">STUPID</div>
 
-  <!-- ── Restart button ── -->
-  <button id="restartBtn" onclick="startRestartSequence()">🔄 Restart</button>
+  <!-- ── Pill Choice ── -->
+  <div id="pillChoice">
+    <div id="pillPrompt">Choose your pill...</div>
+    <div id="pillRow">
+      <div class="pillOption" onclick="choosePill('blue')">
+        <svg viewBox="0 0 120 52" xmlns="http://www.w3.org/2000/svg">
+          <path d="M26,4 L60,4 L60,48 L26,48 Q4,48 4,26 Q4,4 26,4 Z" fill="#1144cc"/>
+          <path d="M60,4 L94,4 Q116,4 116,26 Q116,48 94,48 L60,48 Z" fill="#4488ff"/>
+          <line x1="60" y1="4" x2="60" y2="48" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>
+          <ellipse cx="36" cy="17" rx="12" ry="6" fill="rgba(255,255,255,.3)" transform="rotate(-20 36 17)"/>
+        </svg>
+        <div class="pillLabel">Blue Pill</div>
+      </div>
+      <div class="pillOption" onclick="choosePill('red')">
+        <svg viewBox="0 0 120 52" xmlns="http://www.w3.org/2000/svg">
+          <path d="M26,4 L60,4 L60,48 L26,48 Q4,48 4,26 Q4,4 26,4 Z" fill="#cc0000"/>
+          <path d="M60,4 L94,4 Q116,4 116,26 Q116,48 94,48 L60,48 Z" fill="#ff4444"/>
+          <line x1="60" y1="4" x2="60" y2="48" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>
+          <ellipse cx="36" cy="17" rx="12" ry="6" fill="rgba(255,255,255,.3)" transform="rotate(-20 36 17)"/>
+        </svg>
+        <div class="pillLabel">Red Pill</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Blue Pill Flash ── -->
+  <div id="bluePillFlash">
+    <div id="bluePillMsg">You wake up in your bed.<br>The game continues...</div>
+  </div>
+
+  <!-- ── Rubber Room ── -->
+  <div id="rubberRoom">
+    <div id="roomHeader">🐀 CATCH THE RATS BEFORE YOU GO CRAZY! 🐀</div>
+    <div id="ratCounter">🐀 0 / 5</div>
+    <div id="bucketArea">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18,22 Q40,10 62,22" fill="none" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+        <path d="M10,26 L70,26 L62,72 L18,72 Z" fill="#8B6914"/>
+        <ellipse cx="40" cy="26" rx="30" ry="7" fill="#a07820"/>
+        <line x1="13" y1="44" x2="67" y2="44" stroke="#7a5e10" stroke-width="2.5" opacity="0.5"/>
+        <line x1="16" y1="58" x2="64" y2="58" stroke="#7a5e10" stroke-width="2.5" opacity="0.5"/>
+        <text x="40" y="70" text-anchor="middle" font-size="10" fill="rgba(0,0,0,0)" id="bucketFill">0</text>
+      </svg>
+      <div id="bucketLabel">bucket</div>
+    </div>
+  </div>
 
   <!-- ── Restart chicken (rear view) + egg ── -->
   <div id="restartArea">
@@ -1196,7 +1346,11 @@ const balloonWrap   = document.getElementById('balloonWrap');
 const flashOverlay  = document.getElementById('flashOverlay');
 const lightningBolt = document.getElementById('lightningBolt');
 const stupidText    = document.getElementById('stupidText');
-const restartBtn    = document.getElementById('restartBtn');
+const pillChoice    = document.getElementById('pillChoice');
+const bluePillFlash = document.getElementById('bluePillFlash');
+const rubberRoom    = document.getElementById('rubberRoom');
+const ratCounterEl  = document.getElementById('ratCounter');
+const bucketArea    = document.getElementById('bucketArea');
 const restartArea    = document.getElementById('restartArea');
 const restartChicken = document.getElementById('restartChicken');
 const eggContainer   = document.getElementById('eggContainer');
@@ -1266,22 +1420,163 @@ function triggerLightning() {
       setTimeout(() => {
         stupidText.className = '';
         stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
-        showRestartButton();
+        showPills();
       }, 520);
     }, 3000);
   }, 750);
 }
 
-function showRestartButton() {
-  restartBtn.style.display = 'block';
-  restartBtn.classList.remove('visible');
-  void restartBtn.offsetWidth;
-  restartBtn.classList.add('visible');
+// ─── PILL CHOICE ─────────────────────────────────────────
+function showPills() {
+  pillChoice.style.display = 'flex';
+}
+
+function choosePill(color) {
+  pillChoice.style.display = 'none';
+  if (color === 'blue') startBluePill();
+  else startRedPill();
+}
+
+function startBluePill() {
+  state = 'bluePill';
+  bluePillFlash.style.display = 'flex';
+  setTimeout(() => {
+    bluePillFlash.style.display = 'none';
+    fullReset();
+  }, 2400);
+}
+
+function startRedPill() {
+  state = 'rubberRoom';
+  rubberRoom.style.display = 'block';
+  startRubberRoom();
+}
+
+// ─── RUBBER ROOM ─────────────────────────────────────────
+const RAT_SVG = `<svg viewBox="0 0 70 35" xmlns="http://www.w3.org/2000/svg">
+  <path d="M6,18 Q-8,14 -16,24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="30" cy="21" rx="22" ry="13" fill="#7a7a7a"/>
+  <ellipse cx="52" cy="15" rx="14" ry="12" fill="#8a8a8a"/>
+  <ellipse cx="50" cy="5" rx="6" ry="8" fill="#ffb3b3"/>
+  <circle cx="60" cy="13" r="3" fill="#cc0000"/>
+  <circle cx="61" cy="11.5" r="1" fill="white"/>
+  <ellipse cx="67" cy="16" rx="2.5" ry="2" fill="#ffaaaa"/>
+  <line x1="67" y1="14" x2="80" y2="10" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <line x1="67" y1="16" x2="80" y2="16" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <line x1="67" y1="18" x2="80" y2="22" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <ellipse cx="16" cy="32" rx="6" ry="3.5" fill="#999"/>
+  <ellipse cx="30" cy="33" rx="6" ry="3.5" fill="#999"/>
+  <ellipse cx="44" cy="32" rx="6" ry="3.5" fill="#999"/>
+</svg>`;
+
+const NUM_RATS = 5;
+let rats = [];
+let caughtCount = 0;
+let ratRafId;
+
+function startRubberRoom() {
+  rats = [];
+  caughtCount = 0;
+  ratCounterEl.textContent = '🐀 0 / 5';
+
+  for (let i = 0; i < NUM_RATS; i++) {
+    const el = document.createElement('div');
+    el.className = 'rat';
+    el.innerHTML = RAT_SVG;
+    el.addEventListener('click', () => catchRat(i));
+    rubberRoom.appendChild(el);
+    rats.push({
+      id: i, el,
+      x: 80 + Math.random() * (window.innerWidth - 200),
+      y: 110 + Math.random() * (window.innerHeight - 260),
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5,
+      caught: false,
+    });
+  }
+  moveRats();
+}
+
+function moveRats() {
+  for (const r of rats) {
+    if (r.caught) continue;
+    r.vx += (Math.random() - 0.5) * 0.5;
+    r.vy += (Math.random() - 0.5) * 0.5;
+    const spd = Math.hypot(r.vx, r.vy);
+    if (spd > 5.5) { r.vx = r.vx/spd*5.5; r.vy = r.vy/spd*5.5; }
+    if (spd < 1)   { r.vx += (Math.random()-.5)*3; r.vy += (Math.random()-.5)*3; }
+    r.x += r.vx;
+    r.y += r.vy;
+    const mxX = window.innerWidth  - 80, mxY = window.innerHeight - 120;
+    if (r.x < 10)   { r.x = 10;   r.vx =  Math.abs(r.vx); }
+    if (r.x > mxX)  { r.x = mxX;  r.vx = -Math.abs(r.vx); }
+    if (r.y < 110)  { r.y = 110;  r.vy =  Math.abs(r.vy); }
+    if (r.y > mxY)  { r.y = mxY;  r.vy = -Math.abs(r.vy); }
+    const angle = Math.atan2(r.vy, r.vx) * 180 / Math.PI;
+    r.el.style.left = r.x + 'px';
+    r.el.style.top  = r.y + 'px';
+    r.el.style.transform = `rotate(${angle}deg)`;
+  }
+  ratRafId = requestAnimationFrame(moveRats);
+}
+
+function catchRat(id) {
+  const r = rats[id];
+  if (!r || r.caught) return;
+  r.caught = true;
+  caughtCount++;
+  ratCounterEl.textContent = `🐀 ${caughtCount} / ${NUM_RATS}`;
+
+  const bRect = bucketArea.getBoundingClientRect();
+  r.el.style.transition = 'all 0.4s ease-in';
+  r.el.style.left = (bRect.left + bRect.width/2 - 35) + 'px';
+  r.el.style.top  = (bRect.top) + 'px';
+  r.el.style.transform = 'scale(0.05) rotate(720deg)';
+  r.el.style.opacity = '0';
+
+  if (caughtCount >= NUM_RATS) {
+    cancelAnimationFrame(ratRafId);
+    setTimeout(escapeRoom, 600);
+  }
+}
+
+function escapeRoom() {
+  const msg = document.createElement('div');
+  msg.style.cssText = `
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:white;z-index:1200;font-size:clamp(3rem,14vw,8rem);font-weight:900;
+    color:#00aa44;text-shadow:0 0 40px #00ff88;animation:boomAnim .5s ease-out forwards;
+  `;
+  msg.textContent = 'FREEDOM!';
+  document.body.appendChild(msg);
+  setTimeout(() => {
+    msg.remove();
+    rubberRoom.style.display = 'none';
+    rats.forEach(r => { try { r.el.remove(); } catch(e){} });
+    rats = [];
+    fullReset();
+  }, 1300);
+}
+
+function fullReset() {
+  pillChoice.style.display = 'none';
+  bluePillFlash.style.display = 'none';
+  balloonWrap.className = '';
+  balloonWrap.style.display = '';
+  flashOverlay.className = '';
+  stupidText.className = '';
+  stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+  firstEatDone = false;
+  score = 0;
+  scoreNum.textContent = '0';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('hint').style.display = 'block';
+  faceWrap.style.display = 'block';
+  mouthTarget = 0.18;
+  resetRound();
 }
 
 function startRestartSequence() {
-  restartBtn.classList.remove('visible');
-  restartBtn.style.display = '';
   balloonWrap.className = '';
   balloonWrap.style.display = '';
 
