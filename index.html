@@ -14,9 +14,2494 @@
       font-family: 'Arial Black', Arial, sans-serif;
       background: #000;
     }
+
+    /* ─── GAME AREA ─── */
+    #game {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(180deg, #87CEEB 0%, #c9eaf7 55%, #6ab04c 55%, #4a8c25 100%);
+      overflow: hidden;
+    }
+
+    #game::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 45%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 18px,
+        rgba(0,0,0,.06) 18px, rgba(0,0,0,.06) 20px
+      );
+      pointer-events: none;
+    }
+
+    /* Clouds */
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+      opacity: .85;
+    }
+
+    /* ─── HUD ─── */
+    #hud {
+      position: absolute;
+      top: 18px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      z-index: 100;
+    }
+    #launchBtn {
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      background: linear-gradient(145deg, #ff4500, #cc2200);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: 0 5px 18px rgba(255,69,0,.55);
+      transition: transform .1s, box-shadow .1s;
+      text-shadow: 1px 1px 2px rgba(0,0,0,.4);
+    }
+    #launchBtn:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 7px 22px rgba(255,69,0,.7); }
+    #launchBtn:active:not(:disabled) { transform: scale(.97); }
+    #launchBtn:disabled { background: #666; box-shadow: none; cursor: default; }
+
+    #scoreBox {
+      padding: 10px 22px;
+      background: rgba(0,0,0,.45);
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 12px;
+      color: #ffe600;
+      font-size: 1.3rem;
+      font-weight: 900;
+      text-shadow: 0 0 8px #ff6600;
+    }
+
+    #hint {
+      position: absolute;
+      top: 82px; left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,.9);
+      font-size: 1rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,.6);
+      background: rgba(0,0,0,.25);
+      padding: 6px 18px;
+      border-radius: 20px;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    /* ─── CHICKEN ─── */
+    #chicken {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      display: none;
+      z-index: 50;
+      user-select: none;
+      pointer-events: none;
+      transform-origin: center center;
+      transition: transform 0s, opacity 0s;
+    }
+    #chicken svg { width: 100%; height: 100%; }
+    #chicken.running { animation: bobRun .18s steps(1) infinite; }
+    @keyframes bobRun {
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-6px); }
+    }
+    #chicken.stopped {
+      animation: chickenIdle .6s ease-in-out infinite alternate;
+    }
+    @keyframes chickenIdle {
+      from { transform: scale(1.1) rotate(-3deg); }
+      to   { transform: scale(1.1) rotate(3deg); }
+    }
+    #chicken.scared {
+      animation: chickenScared .08s ease-in-out infinite alternate;
+    }
+    @keyframes chickenScared {
+      from { transform: scale(1.1) rotate(-6deg) translateX(-3px); }
+      to   { transform: scale(1.1) rotate(6deg) translateX(3px); }
+    }
+    #chicken.beingEaten {
+      animation: none;
+      transition: transform 0.35s ease-in, opacity 0.35s ease-in !important;
+    }
+
+    /* ─── PLAYER FACE ─── */
+    #faceWrap {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      cursor: grab;
+      z-index: 60;
+      user-select: none;
+      touch-action: none;
+    }
+    #faceWrap:active { cursor: grabbing; }
+
+    #faceCanvas {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+      display: block;
+    }
+    #faceWrap.near #faceCanvas  { box-shadow: 0 0 0 4px #ffe600, 0 0 28px #ffe600; }
+    #faceWrap.eating #faceCanvas { box-shadow: 0 0 0 4px #ff4500, 0 0 34px #ff4500; }
+
+    /* ─── DRAG LABEL ─── */
+    #dragArrow {
+      position: absolute;
+      left: 50%; top: -40px;
+      transform: translateX(-50%);
+      color: #ffe600;
+      font-size: 1.5rem;
+      animation: bounce .5s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes bounce { from { top: -40px; } to { top: -30px; } }
+
+    /* ─── EXPLOSION LAYER ─── */
+    #explosionLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .spark {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkFly var(--dur,.7s) ease-out forwards;
+    }
+    @keyframes sparkFly {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx),var(--ty)) scale(0); opacity: 0; }
+    }
+    .bigBoom {
+      position: absolute;
+      font-size: 90px;
+      pointer-events: none;
+      animation: boomAnim .7s ease-out forwards;
+    }
+    @keyframes boomAnim {
+      0%   { transform: scale(.3) rotate(-15deg); opacity: 1; }
+      60%  { transform: scale(2.2) rotate(10deg); opacity: 1; }
+      100% { transform: scale(3)   rotate(20deg); opacity: 0; }
+    }
+    .feather {
+      position: absolute;
+      font-size: 28px;
+      pointer-events: none;
+      animation: featherFly var(--dur,.9s) ease-out forwards;
+    }
+    @keyframes featherFly {
+      0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--tx),var(--ty)) rotate(var(--rot,360deg)); opacity: 0; }
+    }
+    .comboText {
+      position: absolute;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffe600;
+      text-shadow: 2px 2px 0 #c00, 0 0 20px #ff6600;
+      pointer-events: none;
+      z-index: 300;
+      animation: comboRise 1s ease-out forwards;
+    }
+    @keyframes comboRise {
+      0%   { transform: translateY(0) scale(.5); opacity: 1; }
+      60%  { transform: translateY(-60px) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-120px) scale(1); opacity: 0; }
+    }
+
+    /* ─── BALLOON ─── */
+    #balloonWrap {
+      position: absolute;
+      left: 50%;
+      bottom: -220px;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 500;
+    }
+    #balloonWrap.floating {
+      display: flex;
+      animation: balloonRise 2.8s ease-out forwards;
+    }
+    @keyframes balloonRise {
+      0%   { bottom: -220px; opacity: 0; }
+      8%   { opacity: 1; }
+      100% { bottom: 32%; opacity: 1; }
+    }
+    #balloonBody {
+      width: 110px;
+      height: 120px;
+      background: radial-gradient(ellipse at 35% 28%, #ff9090, #dd1111 55%, #880000);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 3px rgba(0,0,0,.5);
+      box-shadow: inset -10px -12px 28px rgba(0,0,0,.3), 0 4px 20px rgba(200,0,0,.4);
+      animation: balloonBob 1.8s ease-in-out infinite alternate;
+      position: relative;
+    }
+    /* shine */
+    #balloonBody::before {
+      content: '';
+      position: absolute;
+      top: 14%; left: 20%;
+      width: 28px; height: 20px;
+      background: rgba(255,255,255,.35);
+      border-radius: 50%;
+      transform: rotate(-30deg);
+    }
+    @keyframes balloonBob {
+      from { transform: rotate(-4deg); }
+      to   { transform: rotate(4deg); }
+    }
+    #balloonKnot {
+      width: 0; height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 16px solid #880000;
+    }
+    #balloonString {
+      width: 2px;
+      height: 130px;
+      background: rgba(100,100,100,.6);
+      border-radius: 1px;
+    }
+    #balloonWrap.popping { pointer-events: none; animation: none !important; }
+    #balloonWrap.popping #balloonBody {
+      animation: balloonPop .35s ease-out forwards;
+    }
+    @keyframes balloonPop {
+      0%   { transform: scale(1); opacity: 1; }
+      35%  { transform: scale(1.6); opacity: 1; }
+      100% { transform: scale(.05); opacity: 0; }
+    }
+    #balloonWrap.popping #balloonKnot,
+    #balloonWrap.popping #balloonString { opacity: 0; }
+
+    /* ─── LIGHTNING ─── */
+    #flashOverlay {
+      position: fixed;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 600;
+    }
+    #flashOverlay.flashing {
+      animation: flashAnim 1.6s ease-out forwards;
+    }
+    @keyframes flashAnim {
+      0%   { opacity: 0; }
+      4%   { opacity: 1; }
+      18%  { opacity: .95; }
+      100% { opacity: 0; }
+    }
+    #lightningBolt {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 65vh;
+      z-index: 601;
+      pointer-events: none;
+      opacity: 0;
+      filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 20px #ffffaa) drop-shadow(0 0 40px #ffee00);
+    }
+    #lightningBolt.striking {
+      animation: boltAnim 1.3s ease-out forwards;
+    }
+    @keyframes boltAnim {
+      0%   { opacity: 0; }
+      3%   { opacity: 1; }
+      55%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ─── STUPID ─── */
+    #stupidText {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: clamp(4rem, 16vw, 11rem);
+      font-weight: 900;
+      color: #ff1a00;
+      text-shadow: 0 0 30px #ffff00, 0 0 60px #ff6600, 5px 5px 0 #000, -3px -3px 0 #000;
+      letter-spacing: .08em;
+      pointer-events: none;
+      z-index: 700;
+      white-space: nowrap;
+    }
+    #stupidText.visible {
+      animation: stupidIn .45s cubic-bezier(.17,.67,.39,1.4) forwards;
+    }
+    @keyframes stupidIn {
+      0%   { transform: translate(-50%,-50%) scale(0) rotate(-12deg); }
+      65%  { transform: translate(-50%,-50%) scale(1.18) rotate(4deg); }
+      100% { transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+    #stupidText.hiding {
+      animation: stupidOut .5s ease-in forwards;
+    }
+    @keyframes stupidOut {
+      from { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+      to   { transform: translate(-50%,-50%) scale(.4); opacity: 0; }
+    }
+
+    /* ─── PILL CHOICE ─── */
+    #pillChoice {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 750;
+      background: rgba(0,0,0,.8);
+      backdrop-filter: blur(6px);
+    }
+    #pillPrompt {
+      color: #fff;
+      font-size: clamp(1.4rem, 5vw, 2.6rem);
+      font-weight: 900;
+      text-shadow: 0 0 30px rgba(255,255,255,.5);
+      margin-bottom: 50px;
+      letter-spacing: .06em;
+      text-align: center;
+    }
+    #pillRow {
+      display: flex;
+      gap: clamp(30px, 10vw, 100px);
+      align-items: center;
+    }
+    .pillOption {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      gap: 14px;
+      transition: transform .2s;
+    }
+    .pillOption:hover { transform: scale(1.18) rotate(-5deg); }
+    .pillOption svg { width: clamp(120px,22vw,180px); height: auto; filter: drop-shadow(0 6px 24px rgba(0,0,0,.6)); }
+    .pillLabel {
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ─── BLUE PILL FLASH ─── */
+    #bluePillFlash {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #2255ff, #000066);
+      z-index: 1100;
+    }
+    #bluePillMsg {
+      color: white;
+      font-size: clamp(1.5rem, 5vw, 3rem);
+      font-weight: 900;
+      text-align: center;
+      text-shadow: 0 0 40px rgba(100,180,255,.9);
+      line-height: 1.5;
+      padding: 0 24px;
+      animation: blueTextIn .7s .2s ease-out both;
+    }
+    @keyframes blueTextIn {
+      from { opacity: 0; transform: scale(.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ─── RUBBER ROOM ─── */
+    #rubberRoom {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 1000;
+      overflow: hidden;
+      background-color: #e2ddd0;
+      background-image:
+        radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,255,255,.6) 28%, transparent 29%) 0 0 / 60px 60px,
+        repeating-linear-gradient(0deg,  rgba(0,0,0,.07) 0, rgba(0,0,0,.07) 1px, transparent 1px, transparent 60px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0, rgba(0,0,0,.07) 1px, transparent 1px, transparent 60px);
+      box-shadow: inset 0 0 140px rgba(0,0,0,.4);
+    }
+    #roomHeader {
+      position: absolute;
+      top: 18px; left: 50%;
+      transform: translateX(-50%);
+      color: #cc0000;
+      font-size: clamp(1rem, 4vw, 1.8rem);
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+      white-space: nowrap;
+      animation: roomShake .12s ease-in-out infinite alternate;
+      z-index: 1003; pointer-events: none;
+    }
+    @keyframes roomShake {
+      from { transform: translateX(calc(-50% - 2px)) rotate(-.8deg); }
+      to   { transform: translateX(calc(-50% + 2px)) rotate(.8deg); }
+    }
+    #ratCounter {
+      position: absolute;
+      top: 65px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #333;
+      z-index: 1003; pointer-events: none;
+    }
+    #bucketArea {
+      position: absolute;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1003; pointer-events: none;
+    }
+    #bucketArea svg { width: 90px; height: 90px; }
+    #bucketLabel {
+      color: #444;
+      font-size: .85rem;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+    .rat {
+      position: absolute;
+      width: 70px;
+      height: 35px;
+      cursor: pointer;
+      z-index: 1002;
+      user-select: none;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+    }
+    .rat:hover { filter: drop-shadow(0 0 8px #ff0) brightness(1.4); }
+    .rat svg { width: 100%; height: 100%; }
+
+    /* ─── RESTART CHICKEN + EGG ─── */
+    #restartArea {
+      position: fixed;
+      bottom: -160px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      display: none;
+      z-index: 500;
+    }
+    #restartArea.entering {
+      display: block;
+      animation: rAreaEnter .6s ease-out forwards;
+    }
+    @keyframes rAreaEnter {
+      from { bottom: -160px; }
+      to   { bottom: 20%; }
+    }
+
+    #restartChicken {
+      width: 130px;
+      height: 130px;
+      pointer-events: none;
+    }
+    #restartChicken svg { width: 100%; height: 100%; }
+    #restartChicken.laying {
+      animation: rChickenLay 1s ease-in-out forwards;
+    }
+    @keyframes rChickenLay {
+      0%   { transform: translateY(0)     scaleY(1);   }
+      22%  { transform: translateY(-7px)  scaleY(.94); }
+      48%  { transform: translateY(-15px) scaleY(.87); }
+      72%  { transform: translateY(-5px)  scaleY(.96); }
+      100% { transform: translateY(0)     scaleY(1);   }
+    }
+
+    /* Egg container clips the egg — grows downward from cloaca */
+    #eggContainer {
+      position: absolute;
+      top: 98px; /* cloaca y position inside the 130px chicken element */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 68px;
+      height: 0;
+      overflow: hidden;
+      cursor: default;
+      z-index: 501;
+    }
+    #eggContainer.pushing {
+      animation: eggPush 2.2s cubic-bezier(.4,0,.6,1) forwards;
+    }
+    @keyframes eggPush {
+      0%   { height: 0; }
+      100% { height: 90px; }
+    }
+    #eggContainer.done { cursor: pointer; }
+
+    #egg {
+      width: 68px;
+      height: 90px;
+      background: radial-gradient(ellipse at 38% 32%, #fffef5, #f5e466 45%, #d4a800);
+      border-radius: 50% 50% 50% 50% / 42% 42% 58% 58%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 900;
+      color: #444;
+      text-align: center;
+      line-height: 1.3;
+      padding: 10px;
+      box-shadow: 2px 4px 14px rgba(0,0,0,.25), inset -5px -6px 14px rgba(0,0,0,.1);
+    }
+    #eggContainer.done #egg {
+      animation: eggWobble .85s ease-in-out infinite alternate;
+    }
+    @keyframes eggWobble {
+      from { transform: rotate(-7deg) scale(1); }
+      to   { transform: rotate(7deg) scale(1.04); }
+    }
+
+    /* ─── ANGRY MAN ─── */
+    #angryManWrap {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      z-index: 800;
+      bottom: 6%;
+    }
+    #hitArrow {
+      text-align: center;
+      color: #ffe600;
+      font-size: 1rem;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000, 0 0 10px #ff6600;
+      animation: arrowBounce .45s ease-in-out infinite alternate;
+      margin-bottom: 4px;
+      pointer-events: none;
+      line-height: 1.5;
+    }
+    @keyframes arrowBounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(12px); }
+    }
+    #angryManSvg {
+      width: 110px;
+      height: 175px;
+      cursor: pointer;
+      animation: manShake .1s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.55));
+      display: block;
+    }
+    @keyframes manShake {
+      from { transform: rotate(-5deg) translateX(-4px); }
+      to   { transform: rotate(5deg) translateX(4px); }
+    }
+    #hitCounter {
+      margin-top: 8px;
+      font-size: 1.4rem;
+      min-height: 1.8rem;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .hitFlash {
+      position: fixed;
+      font-size: 3rem;
+      pointer-events: none;
+      z-index: 900;
+      animation: hitFlashAnim .55s ease-out forwards;
+    }
+    @keyframes hitFlashAnim {
+      0%   { transform: scale(0.2) rotate(0deg);  opacity: 1; }
+      50%  { transform: scale(1.5) rotate(15deg); opacity: 1; }
+      100% { transform: scale(1.8) rotate(30deg); opacity: 0; }
+    }
+
+    /* ─── CRACKED EGG ─── */
+    #crackedEggWrap {
+      position: fixed;
+      left: 50%;
+      bottom: 12%;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 800;
+    }
+    #crackedEggWrap svg {
+      width: 90px;
+      height: 110px;
+      animation: crackedWobble .7s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 14px rgba(0,0,0,.4));
+    }
+    @keyframes crackedWobble {
+      from { transform: rotate(-5deg) scale(1); }
+      to   { transform: rotate(5deg) scale(1.04); }
+    }
+    #crackLabel {
+      color: #ffe600;
+      font-size: 1.1rem;
+      font-weight: 900;
+      text-shadow: 2px 2px 0 #000;
+      margin-top: 10px;
+      animation: crackPulse .6s ease-in-out infinite alternate;
+    }
+    @keyframes crackPulse {
+      from { opacity: 0.75; transform: scale(0.95); }
+      to   { opacity: 1;    transform: scale(1.05); }
+    }
+
+    /* ─── EGG SPLAT ─── */
+    #eggSplat {
+      position: fixed;
+      inset: 0;
+      display: none;
+      pointer-events: none;
+      z-index: 850;
+      overflow: hidden;
+    }
+    #eggSplat.active { display: block; }
+    #eggSplat svg {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      animation: splatGrow 1.6s ease-out forwards;
+    }
+    @keyframes splatGrow {
+      0%  { transform: translate(-50%,-50%) scale(0.05); opacity: 1; }
+      40% { transform: translate(-50%,-50%) scale(1.3);  opacity: 1; }
+      100%{ transform: translate(-50%,-50%) scale(1.5);  opacity: 0; }
+    }
+    /* ─── CRAZY MINI-GAME OVERLAY ─── */
+    #crazyOverlay {
+      position: fixed; inset: 0; display: none; z-index: 1100; overflow: hidden;
+    }
+    #crazyTitle {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(1.1rem, 3.2vw, 2rem); font-weight: 900; text-shadow: 3px 3px 0 #000;
+      z-index: 4; white-space: nowrap; pointer-events: none;
+    }
+    #crazyTimer {
+      position: absolute; top: 64px; right: 18px; font-size: 1.8rem; font-weight: 900;
+      color: #ffe600; text-shadow: 2px 2px 0 #000; z-index: 4; pointer-events: none;
+    }
+    #crazyScore {
+      position: absolute; top: 64px; left: 18px; font-size: 1.8rem; font-weight: 900;
+      color: #00ff88; text-shadow: 2px 2px 0 #000; z-index: 4; pointer-events: none;
+    }
+    #cheeseBg {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, #ffe8a0 0%, #ffcc44 60%, #e8a000 100%); overflow: hidden;
+    }
+    .cheeseEl {
+      position: absolute; font-size: 56px; cursor: pointer; user-select: none; z-index: 2;
+    }
+    .cheeseEl:hover { filter: brightness(1.4) drop-shadow(0 0 14px #fff); }
+    .cheeseSlapped { animation: cheeseSlap 0.3s ease-out forwards; pointer-events: none; }
+    @keyframes cheeseSlap {
+      0%   { transform: scale(1) rotate(0); opacity: 1; }
+      40%  { transform: scale(2.2) rotate(25deg); opacity: 1; }
+      100% { transform: scale(0.05) rotate(90deg) translateY(-100px); opacity: 0; }
+    }
+    #eyeBg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, #180018 0%, #000 100%);
+    }
+    .eyeEl { position: absolute; cursor: pointer; z-index: 2; animation: eyePopUp var(--ed, 2s) ease-in-out forwards; }
+    @keyframes eyePopUp {
+      0%   { transform: scale(0.05); opacity: 0; }
+      12%  { transform: scale(1.15); opacity: 1; }
+      75%  { transform: scale(1);    opacity: 1; }
+      100% { transform: scale(0.05); opacity: 0; }
+    }
+    .eyePopped { animation: eyeBurst 0.35s ease-out forwards !important; pointer-events: none; }
+    @keyframes eyeBurst {
+      0%  { transform: scale(1); opacity: 1; }
+      45% { transform: scale(2.2); filter: brightness(8); opacity: 1; }
+      100%{ transform: scale(0.1); opacity: 0; }
+    }
+    #mashBg {
+      position: absolute; inset: 0; background: #050005;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px;
+    }
+    #mashBtn {
+      width: clamp(160px, 32vw, 240px); height: clamp(160px, 32vw, 240px); border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, #ff7744, #cc0000 55%, #660000);
+      border: 8px solid #ff3300; box-shadow: 0 0 60px #ff0000, 0 12px 40px rgba(0,0,0,.8);
+      cursor: pointer; font-size: clamp(1rem, 3.2vw, 1.8rem); font-weight: 900;
+      color: white; text-shadow: 2px 2px 0 #000; user-select: none;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 20px; line-height: 1.3;
+      animation: mashPulse 0.55s ease-in-out infinite alternate;
+    }
+    @keyframes mashPulse {
+      from { box-shadow: 0 0 30px #ff0000, 0 12px 40px rgba(0,0,0,.8); }
+      to   { box-shadow: 0 0 90px #ff6600, 0 0 140px rgba(255,0,0,.4); }
+    }
+    #mashBtn:active { transform: scale(0.88) !important; animation: none !important; }
+    #mashProgress {
+      width: clamp(200px, 55vw, 480px); height: 24px; background: rgba(255,255,255,.1);
+      border-radius: 12px; border: 3px solid rgba(255,255,255,.2); overflow: hidden;
+    }
+    #mashBar {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #ff2200, #ff6600, #ffee00);
+      border-radius: 9px; transition: width 0.08s; box-shadow: 0 0 16px #ff4400;
+    }
+    #clownBg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, #100018 0%, #000008 100%); overflow: hidden;
+    }
+    .clownEl {
+      position: absolute; cursor: pointer; z-index: 2;
+      animation: clownZoomIn var(--cd, 2.5s) ease-in-out forwards;
+      filter: drop-shadow(0 0 18px rgba(255,0,80,.6));
+    }
+    @keyframes clownZoomIn {
+      0%   { transform: scale(0.05) rotate(-15deg); opacity: 0; }
+      18%  { transform: scale(1.2)  rotate(4deg);   opacity: 1; }
+      72%  { transform: scale(1)    rotate(-2deg);  opacity: 1; }
+      100% { transform: scale(0.05) rotate(15deg);  opacity: 0; }
+    }
+    .clownGot { animation: clownSmash 0.38s ease-out forwards !important; pointer-events: none; }
+    @keyframes clownSmash {
+      0%  { transform: scale(1); filter: none; }
+      45% { transform: scale(1.7) rotate(12deg); filter: brightness(6) saturate(0); }
+      100%{ transform: scale(0); opacity: 0; }
+    }
+    /* ─── STROBE ─── */
+    #strobeOverlay { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 1200; }
+    /* ─── GOLLUM ─── */
+    #gollumWrap {
+      position: fixed; inset: 0; display: none;
+      background: radial-gradient(ellipse at center, #0a1400 0%, #000 100%);
+      z-index: 1300; overflow: hidden; cursor: none;
+    }
+    #gollumInstr {
+      position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      color: #aaff44; font-size: clamp(1.1rem, 3.2vw, 1.9rem); font-weight: 900;
+      text-shadow: 0 0 20px #44ff00, 2px 2px 0 #000; white-space: nowrap; z-index: 2; pointer-events: none;
+    }
+    #gollumEl {
+      position: absolute; width: 88px; height: 128px; cursor: pointer; z-index: 3;
+      filter: drop-shadow(0 0 14px #88ff22);
+    }
+    #netCursor { position: fixed; width: 110px; height: 110px; pointer-events: none; z-index: 1302; display: none; transform: translate(-18%, -18%); }
+    #gollumScream {
+      position: absolute; inset: 0; display: none; flex-direction: column;
+      align-items: center; justify-content: center; background: rgba(0,0,0,.92); z-index: 5; gap: 22px;
+    }
+    #gollumScreamText {
+      font-size: clamp(2.5rem, 9vw, 5.5rem); font-weight: 900; color: #ffe600;
+      text-shadow: 0 0 30px #ff6600, 4px 4px 0 #000; text-align: center; line-height: 1.3;
+      animation: gollumShake .12s ease-in-out infinite alternate;
+    }
+    @keyframes gollumShake {
+      from { transform: rotate(-2deg) scale(0.97); }
+      to   { transform: rotate(2deg)  scale(1.04); }
+    }
+    #gollumRingEl { font-size: 5rem; animation: ringFloat 1.1s ease-in-out infinite alternate; }
+    @keyframes ringFloat {
+      from { transform: translateY(0) rotate(-12deg); filter: drop-shadow(0 0 20px #ffe600); }
+      to   { transform: translateY(-22px) rotate(12deg); filter: drop-shadow(0 0 40px #ffaa00); }
+    }
+    /* ─── TCM HORROR GAME ─── */
+    #tcmGame { position: fixed; inset: 0; display: none; background: #050200; overflow: hidden; z-index: 1100; }
+    #tcmRoomEl {
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(18,8,4,.8) 0, rgba(18,8,4,.8) 1px, transparent 1px, transparent 55px),
+        repeating-linear-gradient(90deg, rgba(18,8,4,.8) 0, rgba(18,8,4,.8) 1px, transparent 1px, transparent 55px),
+        linear-gradient(135deg, #0e0700, #1a0c04, #0a0400);
+    }
+    #tcmDark {
+      position: absolute; inset: 0; background: #000; pointer-events: none; z-index: 4;
+      -webkit-mask-image: radial-gradient(circle 150px at 50% 80%, transparent 0%, black 70%);
+      mask-image: radial-gradient(circle 150px at 50% 80%, transparent 0%, black 70%);
+    }
+    #tcmPlayer {
+      position: absolute; width: 20px; height: 20px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 35%, #ffddaa, #cc8855);
+      border: 2px solid rgba(255,230,180,.5); z-index: 5; pointer-events: none;
+    }
+    #tcmLeatherface { position: absolute; width: 80px; height: 120px; z-index: 5; pointer-events: none; }
+    #tcmExit {
+      position: absolute; width: 54px; height: 86px;
+      background: linear-gradient(180deg, #4a2800, #1a0c00); border: 3px solid #774400;
+      border-radius: 8px 8px 0 0; z-index: 3; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #cc7700; font-size: 0.55rem; font-weight: 900; text-align: center; line-height: 1.5;
+    }
+    #tcmHUD {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      color: #cc2200; font-size: 1.1rem; font-weight: 900; text-shadow: 0 0 10px #ff0000;
+      z-index: 6; white-space: nowrap; pointer-events: none;
+      animation: tcmFlick2 2s steps(1) infinite;
+    }
+    @keyframes tcmFlick2 { 0%,48%,52%,100%{ opacity: 1; } 50% { opacity: 0.35; } }
+    #tcmMsg {
+      position: absolute; inset: 0; display: none; flex-direction: column;
+      align-items: center; justify-content: center; background: rgba(0,0,0,.92); z-index: 10; gap: 24px;
+    }
+    #tcmMsgText { font-size: clamp(2rem, 9vw, 5rem); font-weight: 900; text-align: center; line-height: 1.2; }
+    #tcmMsgBtn {
+      padding: 16px 44px; background: linear-gradient(145deg, #cc0000, #880000); color: white;
+      border: none; border-radius: 14px; font-size: 1.4rem; font-weight: 900; cursor: pointer;
+      box-shadow: 0 5px 20px rgba(200,0,0,.5); transition: transform .15s;
+    }
+    #tcmMsgBtn:hover { transform: scale(1.06); }
+    #tcmJumpScare { position: fixed; inset: 0; display: none; background: #cc0000; align-items: center; justify-content: center; z-index: 1500; }
+    #tcmFlickerEl {
+      position: absolute; inset: 0; background: rgba(180,0,0,.05); pointer-events: none; z-index: 7;
+      animation: tcmFlick .09s steps(1) infinite;
+    }
+    @keyframes tcmFlick { 0%,49%{ opacity: 1; } 50%,99%{ opacity: 0; } }
   </style>
 </head>
 <body>
-<p>PLACEHOLDER - REAL FILE TOO LARGE FOR INLINE PARAMETER</p>
+<div id="game">
+
+  <!-- Clouds -->
+  <div class="cloud" style="width:160px;height:50px;top:8%;left:10%">
+    <div style="position:absolute;width:80px;height:80px;top:-40px;left:20px;background:white;border-radius:50%"></div>
+    <div style="position:absolute;width:60px;height:60px;top:-30px;left:70px;background:white;border-radius:50%"></div>
+  </div>
+  <div class="cloud" style="width:120px;height:40px;top:15%;left:60%">
+    <div style="position:absolute;width:65px;height:65px;top:-32px;left:15px;background:white;border-radius:50%"></div>
+    <div style="position:absolute;width:50px;height:50px;top:-24px;left:60px;background:white;border-radius:50%"></div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <button id="launchBtn" onclick="launchChicken()">🐔 Launch Chicken!</button>
+    <div id="scoreBox">Score: <span id="scoreNum">0</span></div>
+  </div>
+  <div id="hint">Click the button to send a chicken running!</div>
+
+  <!-- Chicken -->
+  <div id="chicken">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="62" rx="28" ry="22" fill="#f5c842"/>
+      <circle cx="78" cy="40" r="16" fill="#f5c842"/>
+      <circle cx="84" cy="36" r="3.5" fill="#222"/>
+      <circle cx="85.2" cy="34.8" r="1" fill="white"/>
+      <polygon points="96,40 88,37 88,40" fill="#e07b00"/>
+      <polygon points="96,42 88,40 88,44" fill="#c06000"/>
+      <ellipse cx="72" cy="26" rx="5" ry="7" fill="#e83030"/>
+      <ellipse cx="78" cy="24" rx="4" ry="6" fill="#e83030"/>
+      <ellipse cx="90" cy="50" rx="4" ry="6" fill="#e83030"/>
+      <ellipse cx="44" cy="60" rx="14" ry="9" fill="#d4a800" transform="rotate(-15 44 60)"/>
+      <ellipse cx="22" cy="52" rx="8" ry="5" fill="#c49000" transform="rotate(-40 22 52)"/>
+      <ellipse cx="20" cy="58" rx="8" ry="5" fill="#d4a800" transform="rotate(-55 20 58)"/>
+      <line x1="46" y1="82" x2="38" y2="96" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+      <line x1="54" y1="82" x2="62" y2="98" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+      <line x1="38" y1="96" x2="28" y2="96" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+      <line x1="62" y1="98" x2="72" y2="98" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- Player face (canvas-rendered with animated mouth) -->
+  <div id="faceWrap">
+    <div id="dragArrow">👆</div>
+    <canvas id="faceCanvas" width="140" height="140"></canvas>
+  </div>
+
+  <div id="explosionLayer"></div>
+
+  <!-- ── Balloon ── -->
+  <div id="balloonWrap" onclick="popBalloon()">
+    <div id="balloonBody">Pop<br>me!</div>
+    <div id="balloonKnot"></div>
+    <div id="balloonString"></div>
+  </div>
+
+  <!-- ── Lightning ── -->
+  <div id="flashOverlay"></div>
+  <svg id="lightningBolt" viewBox="0 0 100 200" preserveAspectRatio="none">
+    <defs>
+      <filter id="lglow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- outer glow stroke -->
+    <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
+      fill="none" stroke="rgba(255,255,100,.6)" stroke-width="12"
+      stroke-linejoin="round" filter="url(#lglow)"/>
+    <!-- main bright bolt -->
+    <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
+      fill="none" stroke="white" stroke-width="5"
+      stroke-linejoin="round"/>
+    <!-- inner core -->
+    <polyline points="50,0 68,48 36,54 64,108 24,116 57,168 40,174 62,200"
+      fill="none" stroke="#ffffcc" stroke-width="2"
+      stroke-linejoin="round"/>
+  </svg>
+
+  <!-- ── STUPID ── -->
+  <div id="stupidText">STUPID</div>
+
+  <!-- ── Pill Choice ── -->
+  <div id="pillChoice">
+    <div id="pillPrompt">Choose your pill...</div>
+    <div id="pillRow">
+      <div class="pillOption" onclick="choosePill('blue')">
+        <svg viewBox="0 0 120 52" xmlns="http://www.w3.org/2000/svg">
+          <path d="M26,4 L60,4 L60,48 L26,48 Q4,48 4,26 Q4,4 26,4 Z" fill="#1144cc"/>
+          <path d="M60,4 L94,4 Q116,4 116,26 Q116,48 94,48 L60,48 Z" fill="#4488ff"/>
+          <line x1="60" y1="4" x2="60" y2="48" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>
+          <ellipse cx="36" cy="17" rx="12" ry="6" fill="rgba(255,255,255,.3)" transform="rotate(-20 36 17)"/>
+        </svg>
+        <div class="pillLabel">Blue Pill</div>
+      </div>
+      <div class="pillOption" onclick="choosePill('red')">
+        <svg viewBox="0 0 120 52" xmlns="http://www.w3.org/2000/svg">
+          <path d="M26,4 L60,4 L60,48 L26,48 Q4,48 4,26 Q4,4 26,4 Z" fill="#cc0000"/>
+          <path d="M60,4 L94,4 Q116,4 116,26 Q116,48 94,48 L60,48 Z" fill="#ff4444"/>
+          <line x1="60" y1="4" x2="60" y2="48" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>
+          <ellipse cx="36" cy="17" rx="12" ry="6" fill="rgba(255,255,255,.3)" transform="rotate(-20 36 17)"/>
+        </svg>
+        <div class="pillLabel">Red Pill</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Blue Pill Flash ── -->
+  <div id="bluePillFlash">
+    <div id="bluePillMsg">You wake up in your bed.<br>The game continues...</div>
+  </div>
+
+  <!-- ── Rubber Room ── -->
+  <div id="rubberRoom">
+    <div id="roomHeader">🐀 CATCH THE RATS BEFORE YOU GO CRAZY! 🐀</div>
+    <div id="ratCounter">🐀 0 / 5</div>
+    <div id="bucketArea">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18,22 Q40,10 62,22" fill="none" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+        <path d="M10,26 L70,26 L62,72 L18,72 Z" fill="#8B6914"/>
+        <ellipse cx="40" cy="26" rx="30" ry="7" fill="#a07820"/>
+        <line x1="13" y1="44" x2="67" y2="44" stroke="#7a5e10" stroke-width="2.5" opacity="0.5"/>
+        <line x1="16" y1="58" x2="64" y2="58" stroke="#7a5e10" stroke-width="2.5" opacity="0.5"/>
+        <text x="40" y="70" text-anchor="middle" font-size="10" fill="rgba(0,0,0,0)" id="bucketFill">0</text>
+      </svg>
+      <div id="bucketLabel">bucket</div>
+    </div>
+  </div>
+
+  <!-- ── Restart chicken (rear view) + egg ── -->
+  <div id="restartArea">
+    <div id="restartChicken">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- tail feathers fanning out at top (rear view) -->
+        <ellipse cx="50" cy="22" rx="5"  ry="14" fill="#c49000" transform="rotate(0  50 22)"/>
+        <ellipse cx="38" cy="26" rx="4.5" ry="13" fill="#d4a800" transform="rotate(-22 38 26)"/>
+        <ellipse cx="62" cy="26" rx="4.5" ry="13" fill="#d4a800" transform="rotate(22  62 26)"/>
+        <ellipse cx="27" cy="35" rx="4"  ry="11" fill="#c49000" transform="rotate(-42 27 35)"/>
+        <ellipse cx="73" cy="35" rx="4"  ry="11" fill="#c49000" transform="rotate(42  73 35)"/>
+        <ellipse cx="20" cy="47" rx="3.5" ry="9"  fill="#b88000" transform="rotate(-58 20 47)"/>
+        <ellipse cx="80" cy="47" rx="3.5" ry="9"  fill="#b88000" transform="rotate(58  80 47)"/>
+        <!-- body (round, rear view) -->
+        <ellipse cx="50" cy="60" rx="30" ry="26" fill="#f5c842"/>
+        <!-- body shading / feather texture -->
+        <ellipse cx="50" cy="60" rx="28" ry="24" fill="none" stroke="#e0a800" stroke-width="1.5" opacity=".4"/>
+        <ellipse cx="50" cy="60" rx="20" ry="17" fill="none" stroke="#e0a800" stroke-width="1"   opacity=".3"/>
+        <!-- wings visible on sides -->
+        <ellipse cx="22" cy="62" rx="10" ry="17" fill="#d4a800" transform="rotate(-8 22 62)"/>
+        <ellipse cx="78" cy="62" rx="10" ry="17" fill="#d4a800" transform="rotate(8  78 62)"/>
+        <!-- cloaca / butthole (red, center lower body) -->
+        <ellipse cx="50" cy="78" rx="7"  ry="5"  fill="#8b0000"/>
+        <ellipse cx="50" cy="78" rx="4.5" ry="3.2" fill="#cc1100"/>
+        <ellipse cx="50" cy="78" rx="2.5" ry="1.8" fill="#ff3322"/>
+        <!-- legs -->
+        <line x1="42" y1="84" x2="36" y2="97" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+        <line x1="58" y1="84" x2="64" y2="97" stroke="#e07b00" stroke-width="4" stroke-linecap="round"/>
+        <!-- feet (rear view — toes point outward) -->
+        <line x1="36" y1="97" x2="26" y2="97" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+        <line x1="36" y1="97" x2="33" y2="100" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
+        <line x1="64" y1="97" x2="74" y2="97" stroke="#e07b00" stroke-width="3" stroke-linecap="round"/>
+        <line x1="64" y1="97" x2="67" y2="100" stroke="#e07b00" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <!-- Egg container clips & reveals the egg from the cloaca downward -->
+    <div id="eggContainer" onclick="eggClick()">
+      <div id="egg">Click<br>me!</div>
+    </div>
+  </div>
+
+  <!-- ── Angry Man ── -->
+  <div id="angryManWrap">
+    <div id="hitArrow">Hit me to<br>shut me up! ▼</div>
+    <svg id="angryManSvg" viewBox="0 0 100 175" xmlns="http://www.w3.org/2000/svg" onclick="hitMan()">
+      <!-- shirt -->
+      <rect x="27" y="97" width="46" height="50" rx="9" fill="#e03300"/>
+      <polygon points="50,97 39,103 50,116" fill="white" opacity="0.9"/>
+      <polygon points="50,97 61,103 50,116" fill="white" opacity="0.9"/>
+      <!-- left arm raised -->
+      <line x1="27" y1="109" x2="9" y2="79" stroke="#f0c090" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="7" cy="74" r="9" fill="#e8b880"/>
+      <!-- right arm raised -->
+      <line x1="73" y1="109" x2="91" y2="79" stroke="#f0c090" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="93" cy="74" r="9" fill="#e8b880"/>
+      <!-- legs -->
+      <rect x="33" y="145" width="14" height="27" rx="6" fill="#222"/>
+      <rect x="53" y="145" width="14" height="27" rx="6" fill="#222"/>
+      <ellipse cx="40" cy="172" rx="13" ry="5" fill="#111"/>
+      <ellipse cx="60" cy="172" rx="13" ry="5" fill="#111"/>
+      <!-- neck -->
+      <rect x="43" y="86" width="14" height="14" rx="6" fill="#f0c090"/>
+      <!-- head -->
+      <ellipse cx="50" cy="58" rx="30" ry="32" fill="#f0c090"/>
+      <!-- hair black straight -->
+      <ellipse cx="50" cy="28" rx="27" ry="13" fill="#111"/>
+      <rect x="23" y="28" width="54" height="10" fill="#111"/>
+      <rect x="22" y="30" width="10" height="20" rx="4" fill="#111"/>
+      <rect x="68" y="30" width="10" height="20" rx="4" fill="#111"/>
+      <!-- angry eyebrows slanting inward -->
+      <path d="M26,46 Q33,48 42,53" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <path d="M74,46 Q67,48 58,53" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <!-- eyes -->
+      <ellipse cx="37" cy="59" rx="5" ry="5" fill="white"/>
+      <ellipse cx="63" cy="59" rx="5" ry="5" fill="white"/>
+      <circle cx="38" cy="60" r="3" fill="#111"/>
+      <circle cx="64" cy="60" r="3" fill="#111"/>
+      <circle cx="39" cy="58" r="1" fill="white"/>
+      <circle cx="65" cy="58" r="1" fill="white"/>
+      <!-- nose -->
+      <ellipse cx="50" cy="67" rx="4" ry="3" fill="#d4956a"/>
+      <!-- screaming mouth -->
+      <ellipse cx="50" cy="78" rx="14" ry="12" fill="#550000"/>
+      <path d="M37,70 Q50,75 63,70" fill="#cc4040"/>
+      <rect x="40" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <rect x="46" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <rect x="52" y="69" width="5" height="6" rx="2" fill="#fffdf0"/>
+      <ellipse cx="50" cy="83" rx="9" ry="5" fill="#e04050"/>
+      <rect x="42" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <rect x="47" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <rect x="52" y="82" width="4" height="5" rx="2" fill="#fffdf0"/>
+      <!-- angry cheeks -->
+      <circle cx="28" cy="65" r="8" fill="#ff6060" opacity="0.4"/>
+      <circle cx="72" cy="65" r="8" fill="#ff6060" opacity="0.4"/>
+      <!-- sound waves -->
+      <path d="M12,58 Q5,50 12,42" fill="none" stroke="#ffe600" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M7,64 Q-2,50 7,36" fill="none" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <path d="M88,58 Q95,50 88,42" fill="none" stroke="#ffe600" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M93,64 Q102,50 93,36" fill="none" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <!-- sweat drops -->
+      <path d="M72,35 Q74,31 76,35 Q76,38 74,38 Q72,38 72,35" fill="#aaddff" opacity="0.85"/>
+      <path d="M68,44 Q70,41 71,44 Q71,46 70,46 Q68,46 68,44" fill="#aaddff" opacity="0.65"/>
+    </svg>
+    <div id="hitCounter">❤️❤️❤️❤️</div>
+  </div>
+
+  <!-- ── Cracked Egg ── -->
+  <div id="crackedEggWrap" onclick="crackedEggClick()">
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40,4 C15,4 6,35 6,55 C6,78 22,96 40,96 C58,96 74,78 74,55 C74,35 65,4 40,4 Z" fill="#fffef0" stroke="#ddd" stroke-width="1.5"/>
+      <polyline points="40,4 36,26 46,36 34,50 44,62 40,96" fill="none" stroke="#999" stroke-width="2.5" stroke-linejoin="round"/>
+      <polyline points="46,36 53,31" fill="none" stroke="#bbb" stroke-width="1.5"/>
+      <ellipse cx="46" cy="50" rx="7" ry="5" fill="#f5d020" opacity="0.55"/>
+    </svg>
+    <div id="crackLabel">Click me!</div>
+  </div>
+
+  <!-- ── Crazy Mini-Games Overlay ── -->
+  <div id="crazyOverlay">
+    <div id="cheeseBg"></div>
+    <div id="eyeBg"></div>
+    <div id="mashBg">
+      <div id="mashBtn" onclick="doMash()">MASH<br>ME!</div>
+      <div id="mashProgress"><div id="mashBar"></div></div>
+    </div>
+    <div id="clownBg"></div>
+    <div id="crazyTitle"></div>
+    <div id="crazyTimer"></div>
+    <div id="crazyScore"></div>
+  </div>
+
+  <!-- ── Strobe ── -->
+  <div id="strobeOverlay"></div>
+
+  <!-- ── Gollum Catch ── -->
+  <div id="gollumWrap">
+    <div id="gollumInstr">🎯 CATCH SMÉAGOL WITH YOUR NET!</div>
+    <div id="gollumEl"></div>
+    <div id="gollumScream">
+      <div id="gollumScreamText">MY PRECIOUS!!!</div>
+      <div id="gollumRingEl">💍</div>
+    </div>
+  </div>
+  <svg id="netCursor" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="12" y1="88" x2="58" y2="18" stroke="#8B4513" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="68" cy="20" rx="26" ry="10" fill="none" stroke="#aaa" stroke-width="3" transform="rotate(-15 68 20)"/>
+    <path d="M44,26 Q58,50 72,52 Q80,38 82,22" fill="none" stroke="#bbb" stroke-width="1.5" opacity="0.85"/>
+    <path d="M48,32 Q62,54 75,54" fill="none" stroke="#bbb" stroke-width="1.2" opacity="0.7"/>
+    <path d="M52,38 Q66,58 77,56" fill="none" stroke="#bbb" stroke-width="1" opacity="0.6"/>
+    <line x1="52" y1="23" x2="57" y2="52" stroke="#bbb" stroke-width="1" opacity="0.7"/>
+    <line x1="62" y1="18" x2="65" y2="52" stroke="#bbb" stroke-width="1" opacity="0.7"/>
+    <line x1="72" y1="18" x2="72" y2="52" stroke="#bbb" stroke-width="1" opacity="0.7"/>
+  </svg>
+
+  <!-- ── TCM Horror Game ── -->
+  <div id="tcmGame">
+    <div id="tcmRoomEl"></div>
+    <div id="tcmFlickerEl"></div>
+    <div id="tcmPlayer"></div>
+    <svg id="tcmLeatherface" viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="25" y="90" width="12" height="30" rx="5" fill="#111"/>
+      <rect x="43" y="90" width="12" height="30" rx="5" fill="#111"/>
+      <rect x="20" y="45" width="40" height="48" rx="8" fill="#1a1a0a"/>
+      <path d="M24,45 Q40,42 56,45 L58,90 Q40,94 22,90 Z" fill="#2a0000" opacity="0.85"/>
+      <path d="M33,88 Q31,97 33,102" fill="none" stroke="#cc0000" stroke-width="3" stroke-linecap="round"/>
+      <path d="M44,90 Q42,100 45,106" fill="none" stroke="#990000" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="20" y1="58" x2="4" y2="76" stroke="#1a1a0a" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="3" cy="78" r="7" fill="#1a1a0a"/>
+      <line x1="60" y1="58" x2="76" y2="50" stroke="#1a1a0a" stroke-width="10" stroke-linecap="round"/>
+      <rect x="70" y="38" width="32" height="12" rx="4" fill="#444"/>
+      <rect x="76" y="35" width="24" height="4" rx="2" fill="#666"/>
+      <rect x="76" y="46" width="24" height="4" rx="2" fill="#666"/>
+      <path d="M76,35 L79,31 L82,35 L85,31 L88,35 L91,31 L94,35 L97,31 L100,35" fill="none" stroke="#888" stroke-width="1.5"/>
+      <ellipse cx="90" cy="38" rx="8" ry="3" fill="#cc0000" opacity="0.7"/>
+      <rect x="33" y="32" width="14" height="16" rx="6" fill="#2a1a0a"/>
+      <ellipse cx="40" cy="22" rx="22" ry="24" fill="#1a1200"/>
+      <ellipse cx="40" cy="22" rx="18" ry="20" fill="#2e1c0a"/>
+      <line x1="26" y1="24" x2="34" y2="26" stroke="#555" stroke-width="1.2"/>
+      <line x1="46" y1="26" x2="54" y2="24" stroke="#555" stroke-width="1.2"/>
+      <line x1="37" y1="32" x2="43" y2="32" stroke="#555" stroke-width="1.2"/>
+      <ellipse cx="32" cy="20" rx="5" ry="4" fill="#050000"/>
+      <ellipse cx="48" cy="20" rx="5" ry="4" fill="#050000"/>
+      <circle cx="32" cy="20" r="1.8" fill="#660000"/>
+      <circle cx="48" cy="20" r="1.8" fill="#660000"/>
+      <path d="M30,30 Q40,34 50,30" fill="none" stroke="#111" stroke-width="2"/>
+    </svg>
+    <div id="tcmExit">EXIT<br>▲</div>
+    <div id="tcmDark"></div>
+    <div id="tcmHUD">⚡ 75s — FIND THE EXIT!</div>
+    <div id="tcmMsg">
+      <div id="tcmMsgText" style="color:#cc0000;">☠️ LEATHERFACE GOT YOU ☠️</div>
+      <button id="tcmMsgBtn" onclick="tcmRestart()">TRY AGAIN</button>
+    </div>
+    <div id="tcmJumpScare">
+      <svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg" style="width:min(85vw,520px);height:auto;">
+        <ellipse cx="100" cy="130" rx="90" ry="115" fill="#2e1c0a"/>
+        <ellipse cx="100" cy="128" rx="76" ry="90" fill="#3a2010"/>
+        <line x1="40" y1="100" x2="72" y2="110" stroke="#666" stroke-width="2.5"/>
+        <line x1="128" y1="110" x2="160" y2="100" stroke="#666" stroke-width="2.5"/>
+        <line x1="88" y1="158" x2="112" y2="158" stroke="#666" stroke-width="2.5"/>
+        <line x1="50" y1="68" x2="78" y2="58" stroke="#666" stroke-width="2"/>
+        <line x1="122" y1="58" x2="150" y2="68" stroke="#666" stroke-width="2"/>
+        <ellipse cx="74" cy="112" rx="24" ry="20" fill="#050000"/>
+        <ellipse cx="126" cy="112" rx="24" ry="20" fill="#050000"/>
+        <circle cx="74" cy="112" r="10" fill="#880000"/>
+        <circle cx="74" cy="112" r="5" fill="#ff2200"/>
+        <circle cx="126" cy="112" r="10" fill="#880000"/>
+        <circle cx="126" cy="112" r="5" fill="#ff2200"/>
+        <ellipse cx="100" cy="172" rx="44" ry="36" fill="#050000"/>
+        <path d="M58,150 Q100,147 142,150" fill="#550000"/>
+        <path d="M64,150 L70,134 L76,150 L82,136 L88,150 L94,138 L100,150 L106,138 L112,150 L118,136 L124,150 L130,134 L136,150" fill="white" stroke="#ccc" stroke-width="0.5"/>
+        <path d="M80,188 Q78,202 82,212" fill="none" stroke="#cc0000" stroke-width="4" stroke-linecap="round"/>
+        <path d="M108,190 Q106,205 110,218" fill="none" stroke="#990000" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="138" y="198" width="72" height="20" rx="6" fill="#444" transform="rotate(-15 138 198)"/>
+        <path d="M145,184 L150,174 L155,184 L160,174 L165,184 L170,174 L175,184 L180,174 L185,184" fill="none" stroke="#888" stroke-width="2" transform="rotate(-15 145 184)"/>
+        <ellipse cx="168" cy="200" rx="26" ry="9" fill="#cc0000" opacity="0.8" transform="rotate(-15 168 200)"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Egg Splat ── -->
+  <div id="eggSplat">
+    <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" width="min(90vw,420px)">
+      <ellipse cx="150" cy="145" rx="130" ry="42" fill="#fffef5"/>
+      <ellipse cx="58"  cy="128" rx="33"  ry="16" fill="#fffef5"/>
+      <ellipse cx="242" cy="128" rx="30"  ry="15" fill="#fffef5"/>
+      <ellipse cx="100" cy="158" rx="25"  ry="12" fill="#fffef5"/>
+      <ellipse cx="200" cy="158" rx="28"  ry="13" fill="#fffef5"/>
+      <ellipse cx="80"  cy="110" rx="12"  ry="20" fill="#fffef5" opacity="0.9"/>
+      <ellipse cx="220" cy="112" rx="10"  ry="18" fill="#fffef5" opacity="0.9"/>
+      <ellipse cx="150" cy="96"  rx="8"   ry="14" fill="#fffef5" opacity="0.9"/>
+      <path d="M 95,108 Q 65,88 75,62 Q 90,37 115,52 L 110,102 Z" fill="#fffef0" stroke="#ddd" stroke-width="2"/>
+      <path d="M 205,108 Q 235,88 225,62 Q 210,37 185,52 L 190,102 Z" fill="#fffef0" stroke="#ddd" stroke-width="2"/>
+      <circle cx="150" cy="128" r="50" fill="#f5d020"/>
+      <circle cx="150" cy="128" r="44" fill="#f8de44"/>
+      <ellipse cx="136" cy="114" rx="16" ry="12" fill="#ffe86a" opacity="0.65"/>
+      <circle cx="133" cy="112" r="7" fill="rgba(255,255,200,0.5)"/>
+    </svg>
+  </div>
+
+</div>
+
+<script>
+// ─── CANVAS FACE SETUP ────────────────────────────────────
+const canvas = document.getElementById('faceCanvas');
+const ctx    = canvas.getContext('2d');
+const SIZE   = 140;
+const R      = SIZE / 2;
+
+const img = new Image();
+img.src = 'photo.jpg';
+
+// mouthOpen: 0 = closed, 1 = fully open
+let mouthOpen    = 0;
+let mouthTarget  = 0;
+let chompPhase   = false; // true during snap-shut chomp
+
+img.onload = () => {
+  faceY = window.innerHeight * 0.5 - R;
+  placeFace(faceX, faceY);
+  faceWrap.style.display = 'block';
+  mouthTarget = 0.18; // resting — slight teeth show
+  renderLoop();
+};
+
+function renderLoop() {
+  drawFace();
+  requestAnimationFrame(renderLoop);
+}
+
+function drawFace() {
+  ctx.clearRect(0, 0, SIZE, SIZE);
+
+  // Clip everything to circle
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(R, R, R, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Draw photo
+  ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+  // Smooth lerp toward target
+  mouthOpen += (mouthTarget - mouthOpen) * 0.18;
+
+  if (mouthOpen > 0.04) {
+    drawMouth(mouthOpen);
+  }
+
+  ctx.restore();
+
+  // White border ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(R, R, R - 2, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMouth(t) {
+  // Mouth sits in the lower-centre of the face photo
+  const mx   = R;
+  const my   = SIZE * 0.76;
+  const mw   = SIZE * 0.40 * t;   // half-width
+  const mh   = SIZE * 0.18 * t;   // half-height
+
+  // ── Dark throat ──
+  ctx.beginPath();
+  ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#0d0005';
+  ctx.fill();
+
+  // ── Tongue ──
+  if (t > 0.15) {
+    const tongueAlpha = Math.min(1, (t - 0.15) / 0.35);
+    ctx.globalAlpha = tongueAlpha;
+    ctx.beginPath();
+    ctx.ellipse(mx, my + mh * 0.28, mw * 0.58, mh * 0.62, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#d96068';
+    ctx.fill();
+    // Tongue centre crease
+    ctx.beginPath();
+    ctx.moveTo(mx, my - mh * 0.05);
+    ctx.quadraticCurveTo(mx, my + mh * 0.3, mx, my + mh * 0.85);
+    ctx.strokeStyle = 'rgba(160,50,55,0.45)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Upper teeth ──
+  if (t > 0.2) {
+    const toothAlpha = Math.min(1, (t - 0.2) / 0.4);
+    ctx.globalAlpha = toothAlpha;
+    const numT   = 5;
+    const totalW = mw * 1.72;
+    const tW     = totalW / numT;
+    const tH     = mh * 0.55;
+    const tTop   = my - mh * 0.52;
+    const startX = mx - totalW / 2;
+
+    for (let i = 0; i < numT; i++) {
+      const tx = startX + i * tW + tW * 0.07;
+      const tw = tW * 0.84;
+      // tooth body
+      ctx.fillStyle = '#f2f0ea';
+      roundRect(ctx, tx, tTop, tw, tH, 2);
+      ctx.fill();
+      // subtle shading on right side
+      ctx.fillStyle = 'rgba(180,175,165,0.4)';
+      roundRect(ctx, tx + tw * 0.6, tTop, tw * 0.35, tH, [0, 2, 2, 0]);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Lower teeth (just a hint) ──
+  if (t > 0.35) {
+    const la = Math.min(1, (t - 0.35) / 0.35);
+    ctx.globalAlpha = la * 0.7;
+    const numB   = 4;
+    const totalW = mw * 1.3;
+    const tW     = totalW / numB;
+    const tH     = mh * 0.38;
+    const tBot   = my + mh * 0.5;
+    const startX = mx - totalW / 2;
+
+    for (let i = 0; i < numB; i++) {
+      const tx = startX + i * tW + tW * 0.1;
+      const tw = tW * 0.78;
+      ctx.fillStyle = '#ede9e0';
+      roundRect(ctx, tx, tBot - tH, tw, tH, 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Polyfill for roundRect drawing
+function roundRect(ctx, x, y, w, h, r) {
+  if (typeof r === 'number') r = [r, r, r, r];
+  const [tl, tr, br, bl] = r;
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + tr);
+  ctx.lineTo(x + w, y + h - br);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+  ctx.lineTo(x + bl, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - bl);
+  ctx.lineTo(x, y + tl);
+  ctx.quadraticCurveTo(x, y, x + tl, y);
+  ctx.closePath();
+}
+
+// ─── GAME STATE ──────────────────────────────────────────
+let score          = 0;
+let firstEatDone   = false;
+let state          = 'idle';
+let chickenStopX   = 0, chickenStopY = 0;
+let faceX          = 80, faceY = 0;
+let dragActive     = false, ox = 0, oy = 0;
+let chickenCurrentX = -100;
+
+const chicken  = document.getElementById('chicken');
+const faceWrap = document.getElementById('faceWrap');
+const launchBtn = document.getElementById('launchBtn');
+const hint      = document.getElementById('hint');
+const scoreNum  = document.getElementById('scoreNum');
+const expLayer  = document.getElementById('explosionLayer');
+const dragArrow = document.getElementById('dragArrow');
+
+// ─── LAUNCH ──────────────────────────────────────────────
+function launchChicken() {
+  if (state !== 'idle') return;
+  state = 'running';
+  launchBtn.disabled = true;
+  hint.textContent = 'The chicken is running! 🏃';
+  dragArrow.style.display = 'none';
+
+  const minY = window.innerHeight * 0.48;
+  const maxY = window.innerHeight * 0.80;
+  chickenStopY = minY + Math.random() * (maxY - minY);
+  chickenStopX = window.innerWidth * (.35 + Math.random() * .46);
+
+  chickenCurrentX = -90;
+  chicken.style.left      = chickenCurrentX + 'px';
+  chicken.style.top       = (chickenStopY - 40) + 'px';
+  chicken.style.display   = 'block';
+  chicken.style.opacity   = '1';
+  chicken.style.transform = '';
+  chicken.style.transition = '';
+  chicken.className       = 'running';
+
+  runChicken();
+}
+
+function runChicken() {
+  const speed = 5 + score * 0.4;
+  chickenCurrentX += speed;
+  chicken.style.left = chickenCurrentX + 'px';
+
+  if (chickenCurrentX < chickenStopX) {
+    requestAnimationFrame(runChicken);
+  } else {
+    chickenCurrentX = chickenStopX;
+    chicken.style.left = chickenStopX + 'px';
+    chicken.className = 'stopped';
+    state = 'stopped';
+    hint.textContent = 'Drag the face to eat the chicken! 🍗';
+    dragArrow.style.display = 'block';
+  }
+}
+
+// ─── DRAG ────────────────────────────────────────────────
+function placeFace(x, y) {
+  faceX = x; faceY = y;
+  faceWrap.style.left = x + 'px';
+  faceWrap.style.top  = y + 'px';
+}
+
+faceWrap.addEventListener('pointerdown', e => {
+  if (state !== 'stopped') return;
+  dragActive = true;
+  faceWrap.setPointerCapture(e.pointerId);
+  const r = faceWrap.getBoundingClientRect();
+  ox = e.clientX - r.left;
+  oy = e.clientY - r.top;
+});
+
+faceWrap.addEventListener('pointermove', e => {
+  if (!dragActive) return;
+  placeFace(e.clientX - ox, e.clientY - oy);
+  checkProximity();
+});
+
+faceWrap.addEventListener('pointerup', () => { dragActive = false; });
+
+function checkProximity() {
+  if (state !== 'stopped') return;
+
+  // Face mouth world position (centre-x, lower-third-y of the circle)
+  const mouthWX = faceX + R;
+  const mouthWY = faceY + SIZE * 0.76;
+
+  // Chicken centre
+  const cx = chickenStopX + 40;
+  const cy = chickenStopY + 0;
+  const d  = Math.hypot(mouthWX - cx, mouthWY - cy);
+
+  // Scale mouth open 0→1 as distance goes 110→45
+  const farDist  = 110;
+  const nearDist = 45;
+  if (d < farDist) {
+    const t = 1 - Math.min(1, (d - nearDist) / (farDist - nearDist));
+    mouthTarget = 0.18 + t * 0.82; // 0.18 resting → 1.0 full gape
+  } else {
+    mouthTarget = 0.18;
+  }
+
+  // Chicken gets scared when face is close
+  if (d < 90) {
+    if (!chicken.classList.contains('scared') && !chicken.classList.contains('beingEaten')) {
+      chicken.className = 'scared';
+    }
+  } else {
+    if (chicken.classList.contains('scared')) {
+      chicken.className = 'stopped';
+    }
+  }
+
+  faceWrap.classList.toggle('near', d < farDist && d >= nearDist);
+
+  if (d < nearDist) {
+    eat();
+  }
+}
+
+// ─── EAT ─────────────────────────────────────────────────
+function eat() {
+  if (state !== 'stopped') return;
+  state = 'eating';
+  dragActive = false;
+  faceWrap.classList.remove('near');
+  faceWrap.classList.add('eating');
+
+  // Mouth already open from proximity — slam it to 1
+  mouthTarget = 1;
+
+  // Animate chicken flying into the mouth
+  const mouthWX = faceX + R;
+  const mouthWY = faceY + SIZE * 0.76;
+  const cLeft   = parseFloat(chicken.style.left);
+  const cTop    = parseFloat(chicken.style.top);
+  const dx      = mouthWX - (cLeft + 40);
+  const dy      = mouthWY - (cTop + 40);
+
+  chicken.className = 'beingEaten';
+  chicken.style.transition = 'transform 0.32s ease-in, opacity 0.32s ease-in';
+  chicken.style.transform  = `translate(${dx}px, ${dy}px) scale(0.05)`;
+  chicken.style.opacity    = '0';
+
+  // After chicken reaches mouth: snap shut then explode
+  setTimeout(() => {
+    chicken.style.display = 'none';
+    // Chomp: slam shut
+    mouthTarget = 0;
+    setTimeout(() => {
+      // Burst back open for the explosion
+      mouthTarget = 0.9;
+      explode();
+    }, 180);
+  }, 340);
+}
+
+// ─── EXPLODE ─────────────────────────────────────────────
+function explode() {
+  state = 'exploding';
+  faceWrap.classList.remove('eating');
+
+  score++;
+  scoreNum.textContent = score;
+
+  const bx = faceX + R, by = faceY + R;
+
+  addEl('div', 'bigBoom', { left: (bx - 45) + 'px', top: (by - 45) + 'px' }, '💥');
+
+  const featherEmojis = ['🪶','🪶','🪶','✨','⭐','🔥','💫'];
+  for (let i = 0; i < 14; i++) {
+    const angle = (i / 14) * Math.PI * 2;
+    const dist  = 90 + Math.random() * 150;
+    addEl('div', 'feather', {
+      left: (bx - 14) + 'px', top: (by - 14) + 'px',
+      '--tx': (Math.cos(angle) * dist) + 'px',
+      '--ty': (Math.sin(angle) * dist) + 'px',
+      '--rot': (Math.random() * 720 - 360) + 'deg',
+      '--dur': (.5 + Math.random() * .6) + 's',
+    }, featherEmojis[i % featherEmojis.length]);
+  }
+
+  const sparkColors = ['#ff0','#ff6600','#ff0000','#fff','#ffd700'];
+  for (let i = 0; i < 24; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 40 + Math.random() * 130;
+    addEl('div', 'spark', {
+      left: (bx - 5) + 'px', top: (by - 5) + 'px',
+      width: (6 + Math.random() * 12) + 'px',
+      height: (6 + Math.random() * 12) + 'px',
+      background: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+      '--tx': (Math.cos(angle) * dist) + 'px',
+      '--ty': (Math.sin(angle) * dist) + 'px',
+      '--dur': (.3 + Math.random() * .5) + 's',
+    });
+  }
+
+  const labels = ['NOM!', 'CHOMPED!', 'DEVOURED!', 'DELICIOUS!', 'FEAST!'];
+  addEl('div', 'comboText',
+    { left: (bx - 80) + 'px', top: (by - 40) + 'px', width: '200px', textAlign: 'center' },
+    labels[Math.floor(Math.random() * labels.length)]
+  );
+
+  setTimeout(() => {
+    expLayer.innerHTML = '';
+    if (!firstEatDone) {
+      firstEatDone = true;
+      launchBalloon();
+    } else {
+      resetRound();
+    }
+  }, 1200);
+}
+
+// ─── BALLOON SEQUENCE ────────────────────────────────────
+const balloonWrap   = document.getElementById('balloonWrap');
+const flashOverlay  = document.getElementById('flashOverlay');
+const lightningBolt = document.getElementById('lightningBolt');
+const stupidText    = document.getElementById('stupidText');
+const pillChoice    = document.getElementById('pillChoice');
+const bluePillFlash = document.getElementById('bluePillFlash');
+const rubberRoom    = document.getElementById('rubberRoom');
+const ratCounterEl  = document.getElementById('ratCounter');
+const bucketArea    = document.getElementById('bucketArea');
+const restartArea    = document.getElementById('restartArea');
+const restartChicken = document.getElementById('restartChicken');
+const eggContainer   = document.getElementById('eggContainer');
+
+function launchBalloon() {
+  state = 'balloon';
+  // Hide the face and HUD so balloon is the focus
+  faceWrap.style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('hint').style.display = 'none';
+
+  balloonWrap.className = '';
+  balloonWrap.style.display = 'flex';
+  void balloonWrap.offsetWidth;
+  balloonWrap.classList.add('floating');
+}
+
+function popBalloon() {
+  if (state !== 'balloon') return;
+  state = 'lightning';
+
+  balloonWrap.classList.add('popping');
+
+  // Burst confetti from balloon
+  const bRect = balloonWrap.getBoundingClientRect();
+  const bx = bRect.left + bRect.width / 2;
+  const by = bRect.top + bRect.height / 3;
+  const colors = ['#ff0','#ff4400','#fff','#ff88ff','#00ffff'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'spark';
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 30 + Math.random() * 100;
+    p.style.cssText = `
+      left:${bx - 5}px; top:${by - 5}px;
+      width:${8+Math.random()*8}px; height:${8+Math.random()*8}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      position:fixed; border-radius:50%; z-index:602; pointer-events:none;
+      --tx:${Math.cos(angle)*dist}px; --ty:${Math.sin(angle)*dist}px;
+      --dur:${.4+Math.random()*.4}s;
+      animation: sparkFly var(--dur) ease-out forwards;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+
+  // Trigger lightning after pop animation
+  setTimeout(triggerLightning, 380);
+}
+
+function triggerLightning() {
+  flashOverlay.className = '';
+  lightningBolt.setAttribute('class', '');
+  void flashOverlay.offsetWidth;
+  flashOverlay.classList.add('flashing');
+  lightningBolt.classList.add('striking');
+
+  // STUPID appears while flash is still bright
+  setTimeout(() => {
+    stupidText.style.transform = '';
+    stupidText.className = 'visible';
+
+    // After 3s, hide STUPID and show restart button
+    setTimeout(() => {
+      stupidText.classList.remove('visible');
+      stupidText.classList.add('hiding');
+      setTimeout(() => {
+        stupidText.className = '';
+        stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+        showPills();
+      }, 520);
+    }, 3000);
+  }, 750);
+}
+
+// ─── PILL CHOICE ─────────────────────────────────────────
+function showPills() {
+  pillChoice.style.display = 'flex';
+}
+
+function choosePill(color) {
+  pillChoice.style.display = 'none';
+  if (color === 'blue') startBluePill();
+  else startRedPill();
+}
+
+function startBluePill() {
+  state = 'tcm';
+  startTCMGame();
+}
+
+function startRedPill() {
+  state = 'rubberRoom';
+  rubberRoom.style.display = 'block';
+  startRubberRoom();
+}
+
+// ─── RUBBER ROOM ─────────────────────────────────────────
+const RAT_SVG = `<svg viewBox="0 0 70 35" xmlns="http://www.w3.org/2000/svg">
+  <path d="M6,18 Q-8,14 -16,24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="30" cy="21" rx="22" ry="13" fill="#7a7a7a"/>
+  <ellipse cx="52" cy="15" rx="14" ry="12" fill="#8a8a8a"/>
+  <ellipse cx="50" cy="5" rx="6" ry="8" fill="#ffb3b3"/>
+  <circle cx="60" cy="13" r="3" fill="#cc0000"/>
+  <circle cx="61" cy="11.5" r="1" fill="white"/>
+  <ellipse cx="67" cy="16" rx="2.5" ry="2" fill="#ffaaaa"/>
+  <line x1="67" y1="14" x2="80" y2="10" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <line x1="67" y1="16" x2="80" y2="16" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <line x1="67" y1="18" x2="80" y2="22" stroke="#bbb" stroke-width="0.8" opacity="0.7"/>
+  <ellipse cx="16" cy="32" rx="6" ry="3.5" fill="#999"/>
+  <ellipse cx="30" cy="33" rx="6" ry="3.5" fill="#999"/>
+  <ellipse cx="44" cy="32" rx="6" ry="3.5" fill="#999"/>
+</svg>`;
+
+const NUM_RATS = 5;
+let rats = [];
+let caughtCount = 0;
+let ratRafId;
+
+function startRubberRoom() {
+  rats = [];
+  caughtCount = 0;
+  ratCounterEl.textContent = '🐀 0 / 5';
+
+  for (let i = 0; i < NUM_RATS; i++) {
+    const el = document.createElement('div');
+    el.className = 'rat';
+    el.innerHTML = RAT_SVG;
+    el.addEventListener('click', () => catchRat(i));
+    rubberRoom.appendChild(el);
+    rats.push({
+      id: i, el,
+      x: 80 + Math.random() * (window.innerWidth - 200),
+      y: 110 + Math.random() * (window.innerHeight - 260),
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5,
+      caught: false,
+    });
+  }
+  moveRats();
+}
+
+function moveRats() {
+  for (const r of rats) {
+    if (r.caught) continue;
+    r.vx += (Math.random() - 0.5) * 0.5;
+    r.vy += (Math.random() - 0.5) * 0.5;
+    const spd = Math.hypot(r.vx, r.vy);
+    if (spd > 5.5) { r.vx = r.vx/spd*5.5; r.vy = r.vy/spd*5.5; }
+    if (spd < 1)   { r.vx += (Math.random()-.5)*3; r.vy += (Math.random()-.5)*3; }
+    r.x += r.vx;
+    r.y += r.vy;
+    const mxX = window.innerWidth  - 80, mxY = window.innerHeight - 120;
+    if (r.x < 10)   { r.x = 10;   r.vx =  Math.abs(r.vx); }
+    if (r.x > mxX)  { r.x = mxX;  r.vx = -Math.abs(r.vx); }
+    if (r.y < 110)  { r.y = 110;  r.vy =  Math.abs(r.vy); }
+    if (r.y > mxY)  { r.y = mxY;  r.vy = -Math.abs(r.vy); }
+    const angle = Math.atan2(r.vy, r.vx) * 180 / Math.PI;
+    r.el.style.left = r.x + 'px';
+    r.el.style.top  = r.y + 'px';
+    r.el.style.transform = `rotate(${angle}deg)`;
+  }
+  ratRafId = requestAnimationFrame(moveRats);
+}
+
+function catchRat(id) {
+  const r = rats[id];
+  if (!r || r.caught) return;
+  r.caught = true;
+  caughtCount++;
+  ratCounterEl.textContent = `🐀 ${caughtCount} / ${NUM_RATS}`;
+
+  const bRect = bucketArea.getBoundingClientRect();
+  r.el.style.transition = 'all 0.4s ease-in';
+  r.el.style.left = (bRect.left + bRect.width/2 - 35) + 'px';
+  r.el.style.top  = (bRect.top) + 'px';
+  r.el.style.transform = 'scale(0.05) rotate(720deg)';
+  r.el.style.opacity = '0';
+
+  if (caughtCount >= NUM_RATS) {
+    cancelAnimationFrame(ratRafId);
+    setTimeout(escapeRoom, 600);
+  }
+}
+
+function escapeRoom() {
+  const msg = document.createElement('div');
+  msg.style.cssText = `
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:white;z-index:1200;font-size:clamp(3rem,14vw,8rem);font-weight:900;
+    color:#00aa44;text-shadow:0 0 40px #00ff88;animation:boomAnim .5s ease-out forwards;
+  `;
+  msg.textContent = 'FREEDOM!';
+  document.body.appendChild(msg);
+  setTimeout(() => {
+    msg.remove();
+    rubberRoom.style.display = 'none';
+    rats.forEach(r => { try { r.el.remove(); } catch(e){} });
+    rats = [];
+    startCrazyGames();
+  }, 1300);
+}
+
+function fullReset() {
+  pillChoice.style.display = 'none';
+  bluePillFlash.style.display = 'none';
+  balloonWrap.className = '';
+  balloonWrap.style.display = '';
+  flashOverlay.className = '';
+  stupidText.className = '';
+  stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+  // clean up new overlays
+  if (typeof crazyOverlay !== 'undefined') crazyOverlay.style.display = 'none';
+  if (typeof strobeOverlay !== 'undefined') strobeOverlay.style.opacity = '0';
+  if (typeof gollumWrap !== 'undefined') { gollumWrap.style.display = 'none'; cancelAnimationFrame(gRafId); document.removeEventListener('mousemove', moveNet); netCursor.style.display = 'none'; }
+  if (typeof tcmGame !== 'undefined') { tcmGame.style.display = 'none'; tcmAlive = false; cancelAnimationFrame(tcmRafId2); clearInterval(tcmTickId); tcmGame.style.transform = ''; document.removeEventListener('keydown', tcmKD); document.removeEventListener('keyup', tcmKU); }
+  firstEatDone = false;
+  score = 0;
+  scoreNum.textContent = '0';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('hint').style.display = 'block';
+  faceWrap.style.display = 'block';
+  mouthTarget = 0.18;
+  resetRound();
+}
+
+function startRestartSequence() {
+  balloonWrap.className = '';
+  balloonWrap.style.display = '';
+
+  // Area bounces up from bottom
+  restartArea.style.display = 'block';
+  void restartArea.offsetWidth;
+  restartArea.className = 'entering';
+
+  // After chicken lands, strain and push egg
+  setTimeout(() => {
+    restartChicken.classList.add('laying');
+
+    // Start egg pushing out mid-strain
+    setTimeout(() => {
+      eggContainer.classList.add('pushing');
+      // Once fully out, enable wobble + clicking
+      setTimeout(() => {
+        eggContainer.classList.add('done');
+      }, 2200);
+    }, 380);
+  }, 620);
+}
+
+function eggClick() {
+  if (!eggContainer.classList.contains('done')) return;
+  restartArea.className = '';
+  restartArea.style.display = '';
+  eggContainer.className = '';
+  restartChicken.className = '';
+  showAngryMan();
+}
+
+// ─── ANGRY MAN SEQUENCE ──────────────────────────────────
+const angryManWrap   = document.getElementById('angryManWrap');
+const angryManSvg    = document.getElementById('angryManSvg');
+const hitCounterEl   = document.getElementById('hitCounter');
+const crackedEggWrap = document.getElementById('crackedEggWrap');
+const eggSplatEl     = document.getElementById('eggSplat');
+let hitCount = 0;
+
+function showAngryMan() {
+  state = 'angryMan';
+  hitCount = 0;
+  hitCounterEl.textContent = '❤️❤️❤️❤️';
+  angryManWrap.style.display = 'flex';
+}
+
+function hitMan() {
+  if (state !== 'angryMan') return;
+  hitCount++;
+
+  // White flash on the man
+  angryManSvg.style.filter = 'brightness(6) saturate(0)';
+  setTimeout(() => { angryManSvg.style.filter = ''; }, 150);
+
+  // Update hearts
+  const remaining = 4 - hitCount;
+  hitCounterEl.textContent = '❤️'.repeat(Math.max(0, remaining));
+
+  // Impact star at random spot on man
+  const impacts = ['⭐', '💫', '✨', '💥'];
+  const rect = angryManSvg.getBoundingClientRect();
+  const star = document.createElement('div');
+  star.className = 'hitFlash';
+  star.textContent = impacts[(hitCount - 1) % impacts.length];
+  star.style.left = (rect.left + 10 + Math.random() * (rect.width - 40)) + 'px';
+  star.style.top  = (rect.top  + 10 + Math.random() * rect.height * 0.55) + 'px';
+  document.body.appendChild(star);
+  setTimeout(() => star.remove(), 650);
+
+  if (hitCount >= 4) {
+    state = 'manExploding';
+    setTimeout(explodeMan, 300);
+  }
+}
+
+function explodeMan() {
+  const rect = angryManSvg.getBoundingClientRect();
+  const bx = rect.left + rect.width / 2;
+  const by = rect.top  + rect.height / 2;
+
+  const colors = ['#ff0','#ff4400','#fff','#ff88ff','#ffd700'];
+  for (let i = 0; i < 24; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 70 + Math.random() * 150;
+    const p = document.createElement('div');
+    p.style.cssText = `
+      position:fixed;border-radius:50%;pointer-events:none;z-index:900;
+      left:${bx}px;top:${by}px;
+      width:${8+Math.random()*12}px;height:${8+Math.random()*12}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;
+      --dur:${.4+Math.random()*.55}s;
+      animation:sparkFly var(--dur) ease-out forwards;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+  const boom = document.createElement('div');
+  boom.className = 'bigBoom';
+  boom.textContent = '💥';
+  boom.style.cssText = `position:fixed;left:${bx-45}px;top:${by-45}px;z-index:900;`;
+  document.body.appendChild(boom);
+  setTimeout(() => boom.remove(), 800);
+
+  angryManWrap.style.display = 'none';
+  setTimeout(showCrackedEgg, 900);
+}
+
+function showCrackedEgg() {
+  state = 'crackedEgg';
+  crackedEggWrap.style.display = 'flex';
+}
+
+function crackedEggClick() {
+  if (state !== 'crackedEgg') return;
+  state = 'yolkSpill';
+  crackedEggWrap.style.display = 'none';
+
+  eggSplatEl.style.display = 'block';
+
+  setTimeout(() => {
+    eggSplatEl.style.display = 'none';
+    flashOverlay.className = '';
+    stupidText.className = '';
+    stupidText.style.transform = 'translate(-50%, -50%) scale(0)';
+    firstEatDone = false;
+    score = 0;
+    scoreNum.textContent = '0';
+    document.getElementById('hud').style.display = 'flex';
+    document.getElementById('hint').style.display = 'block';
+    faceWrap.style.display = 'block';
+    mouthTarget = 0.18;
+    resetRound();
+  }, 1600);
+}
+
+function addEl(tag, cls, styles, text) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  for (const [k, v] of Object.entries(styles)) {
+    if (k.startsWith('--')) el.style.setProperty(k, v);
+    else el.style[k] = v;
+  }
+  if (text !== undefined) el.textContent = text;
+  expLayer.appendChild(el);
+  return el;
+}
+
+// ─── CRAZY GAMES SEQUENCE ────────────────────────────────
+const crazyOverlay  = document.getElementById('crazyOverlay');
+const cheeseBg      = document.getElementById('cheeseBg');
+const eyeBg         = document.getElementById('eyeBg');
+const mashBg        = document.getElementById('mashBg');
+const clownBg       = document.getElementById('clownBg');
+const crazyTitle    = document.getElementById('crazyTitle');
+const crazyTimerEl  = document.getElementById('crazyTimer');
+const crazyScoreEl  = document.getElementById('crazyScore');
+const strobeOverlay = document.getElementById('strobeOverlay');
+
+let crazyGameIdx = 0;
+const crazyGameList = [startCheeseGame, startEyeballGame, startMashGame, startClownGame];
+
+function startCrazyGames() {
+  crazyGameIdx = 0;
+  crazyOverlay.style.display = 'block';
+  cheeseBg.style.display = eyeBg.style.display = mashBg.style.display = clownBg.style.display = 'none';
+  runNextCrazyGame();
+}
+
+function runNextCrazyGame() {
+  if (crazyGameIdx >= crazyGameList.length) { endCrazyGames(); return; }
+  cheeseBg.style.display = eyeBg.style.display = mashBg.style.display = clownBg.style.display = 'none';
+  crazyGameList[crazyGameIdx++]();
+}
+
+function endCrazyGames() {
+  crazyOverlay.style.display = 'none';
+  startStrobe();
+}
+
+// ─── GAME 1: CHEESE FRENZY ───────────────────────────────
+function startCheeseGame() {
+  cheeseBg.style.display = 'block';
+  crazyTitle.textContent = '🧀 CHEESE FRENZY! SLAP THE CHEESE! 🧀';
+  crazyTitle.style.color = '#8B4513';
+  let hit = 0; const need = 8;
+  crazyScoreEl.textContent = `🧀 0 / ${need}`;
+  let timeLeft = 20; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+
+  const spawnI = setInterval(() => {
+    const el = document.createElement('div');
+    el.className = 'cheeseEl';
+    el.textContent = ['🧀','🍕','🥞','🍔','🧁','🌮'][Math.floor(Math.random()*6)];
+    const y = 80 + Math.random() * (window.innerHeight - 200);
+    el.style.cssText = `top:${y}px;left:-80px;`;
+    cheeseBg.appendChild(el);
+    el.addEventListener('click', () => {
+      if (el.classList.contains('cheeseSlapped')) return;
+      el.classList.add('cheeseSlapped');
+      hit++; crazyScoreEl.textContent = `🧀 ${hit} / ${need}`;
+      setTimeout(() => el.remove(), 350);
+    });
+    let x = -80; const spd = 2.5 + Math.random() * 3.5;
+    const move = () => {
+      x += spd; el.style.left = x + 'px';
+      if (x < window.innerWidth + 100 && el.parentNode) requestAnimationFrame(move);
+      else el.remove();
+    };
+    requestAnimationFrame(move);
+  }, 700);
+
+  const tick = setInterval(() => {
+    timeLeft--; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+    if (timeLeft <= 0 || hit >= need) {
+      clearInterval(tick); clearInterval(spawnI);
+      cheeseBg.querySelectorAll('.cheeseEl').forEach(e => e.remove());
+      setTimeout(runNextCrazyGame, 500);
+    }
+  }, 1000);
+}
+
+// ─── GAME 2: EYEBALL ATTACK ──────────────────────────────
+function startEyeballGame() {
+  eyeBg.style.display = 'block';
+  crazyTitle.textContent = '👁 EYEBALL ATTACK! POP THE EYEBALLS! 👁';
+  crazyTitle.style.color = '#ff44ff';
+  let hit = 0; const need = 10;
+  crazyScoreEl.textContent = `👁 0 / ${need}`;
+  let timeLeft = 18; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+  const iris = ['#2244cc','#aa2200','#228822','#774400','#8800aa'];
+
+  const spawnI = setInterval(() => {
+    const sz = 55 + Math.random() * 55;
+    const dur = 1.6 + Math.random() * 1.5;
+    const el = document.createElement('div');
+    el.className = 'eyeEl';
+    el.style.cssText = `left:${10+Math.random()*(window.innerWidth-sz-20)}px;top:${80+Math.random()*(window.innerHeight-sz-120)}px;width:${sz}px;height:${sz}px;--ed:${dur}s;`;
+    el.innerHTML = `<svg viewBox="0 0 60 60" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="30" r="29" fill="white" stroke="#ddd" stroke-width="1.5"/>
+      <circle cx="30" cy="30" r="16" fill="${iris[Math.floor(Math.random()*iris.length)]}"/>
+      <circle cx="30" cy="30" r="9"  fill="#000"/>
+      <circle cx="24" cy="24" r="5"  fill="rgba(255,255,255,0.55)"/>
+      <path d="M4,30 Q30,7 56,30" fill="none" stroke="#ffaaaa" stroke-width="1.2" opacity="0.4"/>
+    </svg>`;
+    el.addEventListener('click', () => {
+      if (el.classList.contains('eyePopped')) return;
+      el.classList.add('eyePopped');
+      hit++; crazyScoreEl.textContent = `👁 ${hit} / ${need}`;
+      const splat = document.createElement('div');
+      splat.style.cssText = `position:absolute;left:${parseFloat(el.style.left)}px;top:${parseFloat(el.style.top)}px;font-size:2rem;pointer-events:none;animation:boomAnim .5s ease-out forwards;z-index:4;`;
+      splat.textContent = '💢';
+      eyeBg.appendChild(splat);
+      setTimeout(() => { splat.remove(); el.remove(); }, 450);
+    });
+    eyeBg.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, (dur + 0.3) * 1000);
+  }, 650);
+
+  const tick = setInterval(() => {
+    timeLeft--; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+    if (timeLeft <= 0 || hit >= need) {
+      clearInterval(tick); clearInterval(spawnI);
+      eyeBg.querySelectorAll('.eyeEl').forEach(e => e.remove());
+      setTimeout(runNextCrazyGame, 500);
+    }
+  }, 1000);
+}
+
+// ─── GAME 3: MASH MASTER ─────────────────────────────────
+let mashCount = 0; const MASH_NEED = 30;
+
+function startMashGame() {
+  mashBg.style.display = 'flex';
+  crazyTitle.textContent = '👊 MASH MASTER! SMASH IT 30 TIMES! 👊';
+  crazyTitle.style.color = '#ff4400';
+  mashCount = 0; crazyTimerEl.textContent = '';
+  crazyScoreEl.textContent = `👊 0 / ${MASH_NEED}`;
+  document.getElementById('mashBar').style.width = '0%';
+  document.getElementById('mashBtn').textContent = 'MASH\nME!';
+}
+
+function doMash() {
+  if (mashCount >= MASH_NEED) return;
+  mashCount++;
+  const pct = (mashCount / MASH_NEED) * 100;
+  document.getElementById('mashBar').style.width = pct + '%';
+  crazyScoreEl.textContent = `👊 ${mashCount} / ${MASH_NEED}`;
+  const emojis = ['💥','⭐','🔥','💫','✨','😱','🤪','🤯','💢'];
+  const btn = document.getElementById('mashBtn');
+  btn.style.transform = `scale(${0.85 + Math.random()*0.3}) rotate(${(Math.random()-0.5)*20}deg)`;
+  setTimeout(() => { btn.style.transform = ''; }, 80);
+  mashBg.style.background = `hsl(${Math.random()*360},80%,8%)`;
+  setTimeout(() => { mashBg.style.background = '#050005'; }, 80);
+  const burst = document.createElement('div');
+  const rect = btn.getBoundingClientRect();
+  burst.style.cssText = `position:fixed;left:${rect.left+rect.width/2-20}px;top:${rect.top-40}px;font-size:2.2rem;pointer-events:none;z-index:1200;animation:boomAnim .4s ease-out forwards;`;
+  burst.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+  document.body.appendChild(burst);
+  setTimeout(() => burst.remove(), 500);
+  if (mashCount >= MASH_NEED) {
+    document.getElementById('mashBtn').textContent = 'DONE! 🤯';
+    setTimeout(runNextCrazyGame, 900);
+  }
+}
+
+// ─── GAME 4: CLOWN BLITZ ─────────────────────────────────
+const CLOWN_SVG = `<svg viewBox="0 0 90 120" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="18" r="18" fill="#ff2200"/>
+  <circle cx="70" cy="18" r="18" fill="#ff2200"/>
+  <ellipse cx="45" cy="14" rx="38" ry="20" fill="#ff2200"/>
+  <ellipse cx="45" cy="68" rx="32" ry="38" fill="#fffef0"/>
+  <ellipse cx="29" cy="58" rx="11" ry="12" fill="white"/>
+  <ellipse cx="61" cy="58" rx="11" ry="12" fill="white"/>
+  <circle cx="29" cy="60" r="6" fill="#000"/>
+  <circle cx="61" cy="60" r="6" fill="#000"/>
+  <circle cx="29" cy="60" r="3" fill="#cc0000"/>
+  <circle cx="61" cy="60" r="3" fill="#cc0000"/>
+  <circle cx="27" cy="57" r="2" fill="white"/>
+  <circle cx="59" cy="57" r="2" fill="white"/>
+  <circle cx="45" cy="74" r="10" fill="#ff0000"/>
+  <circle cx="44" cy="73" r="4" fill="#ff6666"/>
+  <path d="M20,88 Q45,108 70,88" fill="#cc0000" stroke="#000" stroke-width="1.5"/>
+  <path d="M24,88 Q45,102 66,88" fill="#550000"/>
+  <rect x="32" y="86" width="5" height="9" rx="2" fill="#fffdf0"/>
+  <rect x="40" y="86" width="5" height="9" rx="2" fill="#fffdf0"/>
+  <rect x="48" y="86" width="5" height="9" rx="2" fill="#fffdf0"/>
+  <path d="M14,47 Q7,58 14,66" fill="none" stroke="#ff88ff" stroke-width="2"/>
+  <path d="M76,47 Q83,58 76,66" fill="none" stroke="#ff88ff" stroke-width="2"/>
+</svg>`;
+
+function startClownGame() {
+  clownBg.style.display = 'block';
+  crazyTitle.textContent = '🤡 CLOWN BLITZ! STOP THE CLOWNS! 🤡';
+  crazyTitle.style.color = '#ff00ff';
+  let hit = 0; const need = 5;
+  crazyScoreEl.textContent = `🤡 0 / ${need}`;
+  let timeLeft = 18; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+
+  const spawnI = setInterval(() => {
+    const sz = 90 + Math.random() * 70;
+    const dur = 2 + Math.random() * 1.5;
+    const el = document.createElement('div');
+    el.className = 'clownEl';
+    el.style.cssText = `left:${10+Math.random()*(window.innerWidth-sz-20)}px;top:${80+Math.random()*(window.innerHeight-sz-120)}px;width:${sz}px;--cd:${dur}s;`;
+    el.innerHTML = CLOWN_SVG;
+    el.addEventListener('click', () => {
+      if (el.classList.contains('clownGot')) return;
+      el.classList.add('clownGot');
+      hit++; crazyScoreEl.textContent = `🤡 ${hit} / ${need}`;
+      const boom = document.createElement('div');
+      const rect = el.getBoundingClientRect();
+      boom.style.cssText = `position:fixed;left:${rect.left+rect.width/2-20}px;top:${rect.top+rect.height/2-20}px;font-size:2.5rem;pointer-events:none;z-index:1200;animation:boomAnim .5s ease-out forwards;`;
+      boom.textContent = '💥';
+      document.body.appendChild(boom);
+      setTimeout(() => { boom.remove(); el.remove(); }, 450);
+    });
+    clownBg.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, (dur + 0.3) * 1000);
+  }, 1400);
+
+  const tick = setInterval(() => {
+    timeLeft--; crazyTimerEl.textContent = `⏱ ${timeLeft}s`;
+    if (timeLeft <= 0 || hit >= need) {
+      clearInterval(tick); clearInterval(spawnI);
+      clownBg.querySelectorAll('.clownEl').forEach(e => e.remove());
+      setTimeout(runNextCrazyGame, 500);
+    }
+  }, 1000);
+}
+
+// ─── STROBE ──────────────────────────────────────────────
+function startStrobe() {
+  let flashes = 0; const maxFlashes = 14;
+  function flash() {
+    if (flashes >= maxFlashes) { strobeOverlay.style.opacity = '0'; setTimeout(startGollumSequence, 300); return; }
+    strobeOverlay.style.opacity = flashes % 2 === 0 ? '1' : '0';
+    flashes++;
+    setTimeout(flash, 80 + flashes * 12);
+  }
+  flash();
+}
+
+// ─── GOLLUM CATCH ────────────────────────────────────────
+const gollumWrap  = document.getElementById('gollumWrap');
+const gollumEl    = document.getElementById('gollumEl');
+const netCursor   = document.getElementById('netCursor');
+let gX, gY, gVx, gVy, gRafId;
+
+const GOLLUM_SVG = `<svg viewBox="0 0 90 130" xmlns="http://www.w3.org/2000/svg">
+  <line x1="37" y1="112" x2="26" y2="130" stroke="#8a9a6a" stroke-width="7" stroke-linecap="round"/>
+  <line x1="53" y1="112" x2="64" y2="130" stroke="#8a9a6a" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="45" cy="92" rx="14" ry="22" fill="#8a9a6a"/>
+  <line x1="31" y1="80" x2="7"  y2="64" stroke="#8a9a6a" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="5"  cy="62" r="5" fill="#8a9a6a"/>
+  <line x1="59" y1="80" x2="83" y2="64" stroke="#8a9a6a" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="85" cy="62" r="5" fill="#8a9a6a"/>
+  <circle cx="5"  cy="62" r="3.5" fill="#ffe600" stroke="#aa8800" stroke-width="1"/>
+  <rect x="38" y="64" width="14" height="14" rx="5" fill="#8a9a6a"/>
+  <ellipse cx="45" cy="42" rx="32" ry="36" fill="#9aaa7a"/>
+  <ellipse cx="30" cy="38" rx="13" ry="14" fill="#dddd88"/>
+  <ellipse cx="60" cy="38" rx="13" ry="14" fill="#dddd88"/>
+  <circle cx="30" cy="40" r="7" fill="#446600"/>
+  <circle cx="60" cy="40" r="7" fill="#446600"/>
+  <circle cx="30" cy="40" r="4" fill="#000"/>
+  <circle cx="60" cy="40" r="4" fill="#000"/>
+  <circle cx="28" cy="37" r="2" fill="rgba(255,255,255,0.7)"/>
+  <circle cx="58" cy="37" r="2" fill="rgba(255,255,255,0.7)"/>
+  <ellipse cx="12" cy="36" rx="9" ry="14" fill="#8a9a6a"/>
+  <ellipse cx="78" cy="36" rx="9" ry="14" fill="#8a9a6a"/>
+  <ellipse cx="45" cy="54" rx="5" ry="3" fill="#7a8a5a"/>
+  <path d="M27,62 Q45,76 63,62" fill="#442200"/>
+  <rect x="37" y="61" width="4" height="7" rx="2" fill="#ddd8c0"/>
+  <rect x="49" y="61" width="4" height="7" rx="2" fill="#ddd8c0"/>
+</svg>`;
+
+function startGollumSequence() {
+  gollumWrap.style.display = 'block';
+  gollumEl.innerHTML = GOLLUM_SVG;
+  document.getElementById('gollumScream').style.display = 'none';
+  gX = window.innerWidth  * 0.5;
+  gY = window.innerHeight * 0.4;
+  gVx = (Math.random() - 0.5) * 7;
+  gVy = (Math.random() - 0.5) * 7;
+  gollumEl.style.left = gX + 'px';
+  gollumEl.style.top  = gY + 'px';
+  gollumEl.addEventListener('click', catchGollum, { once: true });
+  document.addEventListener('mousemove', moveNet);
+  netCursor.style.display = 'block';
+  moveGollum();
+}
+
+function moveNet(e) {
+  netCursor.style.left = (e.clientX - 10) + 'px';
+  netCursor.style.top  = (e.clientY - 10) + 'px';
+}
+
+function moveGollum() {
+  gVx += (Math.random() - 0.5) * 1.8;
+  gVy += (Math.random() - 0.5) * 1.8;
+  const spd = Math.hypot(gVx, gVy);
+  if (spd > 7.5) { gVx = gVx/spd*7.5; gVy = gVy/spd*7.5; }
+  if (spd < 2)   { gVx += (Math.random()-.5)*4; gVy += (Math.random()-.5)*4; }
+  gX += gVx; gY += gVy;
+  const mxX = window.innerWidth - 100, mxY = window.innerHeight - 150;
+  if (gX < 10)  { gX = 10;  gVx =  Math.abs(gVx); }
+  if (gX > mxX) { gX = mxX; gVx = -Math.abs(gVx); }
+  if (gY < 80)  { gY = 80;  gVy =  Math.abs(gVy); }
+  if (gY > mxY) { gY = mxY; gVy = -Math.abs(gVy); }
+  gollumEl.style.left = gX + 'px';
+  gollumEl.style.top  = gY + 'px';
+  gollumEl.style.transform = gVx < 0 ? 'scaleX(-1)' : '';
+  gRafId = requestAnimationFrame(moveGollum);
+}
+
+function catchGollum() {
+  cancelAnimationFrame(gRafId);
+  document.removeEventListener('mousemove', moveNet);
+  netCursor.style.display = 'none';
+  gollumEl.style.filter = 'brightness(6) saturate(0)';
+  setTimeout(() => {
+    gollumEl.style.display = 'none';
+    document.getElementById('gollumScream').style.display = 'flex';
+    setTimeout(() => {
+      gollumWrap.style.display = 'none';
+      gollumEl.style.display = '';
+      gollumEl.style.filter = '';
+      fullReset();
+    }, 2800);
+  }, 350);
+}
+
+// ─── TCM HORROR GAME ─────────────────────────────────────
+const tcmGame = document.getElementById('tcmGame');
+const tcmDark = document.getElementById('tcmDark');
+let tcmPX, tcmPY, tcmLX, tcmLY, tcmAlive, tcmTimeLeft2, tcmRafId2, tcmTickId, tcmJumpLocked;
+const TCM_SPEED = 3, TCM_LF_SPEED = 1.55, TCM_CATCH = 55, TCM_EXIT = 48;
+let tcmKeys2 = {};
+
+function startTCMGame() {
+  tcmGame.style.display = 'block';
+  document.getElementById('tcmMsg').style.display = 'none';
+  document.getElementById('tcmJumpScare').style.display = 'none';
+  tcmStartRound();
+}
+
+function tcmStartRound() {
+  tcmAlive = true; tcmJumpLocked = false;
+  tcmTimeLeft2 = 75;
+  const W = window.innerWidth, H = window.innerHeight;
+  tcmPX = W * 0.5; tcmPY = H * 0.82;
+  tcmLX = W * 0.1; tcmLY = H * 0.12;
+  const ex = W * (0.55 + Math.random() * 0.38);
+  const ey = H * (0.06 + Math.random() * 0.22);
+
+  const player = document.getElementById('tcmPlayer');
+  const lf     = document.getElementById('tcmLeatherface');
+  const exit   = document.getElementById('tcmExit');
+  player.style.left = (tcmPX - 10) + 'px'; player.style.top = (tcmPY - 10) + 'px';
+  lf.style.left     = (tcmLX - 40) + 'px'; lf.style.top     = (tcmLY - 60) + 'px';
+  exit.style.left = ex + 'px'; exit.style.top = ey + 'px';
+  exit.onclick = tcmTouchExit;
+
+  document.getElementById('tcmMsg').style.display = 'none';
+  document.getElementById('tcmHUD').textContent = `⚡ ${tcmTimeLeft2}s — FIND THE EXIT!`;
+  tcmUpdateDark();
+
+  document.addEventListener('keydown', tcmKD);
+  document.addEventListener('keyup',   tcmKU);
+  cancelAnimationFrame(tcmRafId2); clearInterval(tcmTickId);
+  tcmRafId2 = requestAnimationFrame(tcmLoop);
+  tcmTickId = setInterval(tcmTick, 1000);
+}
+
+function tcmKD(e) { tcmKeys2[e.key] = true; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault(); }
+function tcmKU(e) { tcmKeys2[e.key] = false; }
+
+function tcmLoop() {
+  if (!tcmAlive) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  let dx = 0, dy = 0;
+  if (tcmKeys2['ArrowLeft']  || tcmKeys2['a'] || tcmKeys2['A']) dx -= 1;
+  if (tcmKeys2['ArrowRight'] || tcmKeys2['d'] || tcmKeys2['D']) dx += 1;
+  if (tcmKeys2['ArrowUp']    || tcmKeys2['w'] || tcmKeys2['W']) dy -= 1;
+  if (tcmKeys2['ArrowDown']  || tcmKeys2['s'] || tcmKeys2['S']) dy += 1;
+  if (dx && dy) { dx *= 0.707; dy *= 0.707; }
+  tcmPX = Math.max(12, Math.min(W - 12, tcmPX + dx * TCM_SPEED));
+  tcmPY = Math.max(55, Math.min(H - 12, tcmPY + dy * TCM_SPEED));
+
+  const player = document.getElementById('tcmPlayer');
+  player.style.left = (tcmPX - 10) + 'px'; player.style.top = (tcmPY - 10) + 'px';
+
+  const toX = tcmPX - tcmLX, toY = tcmPY - tcmLY;
+  const dist = Math.hypot(toX, toY);
+  if (dist > 5) { tcmLX += (toX/dist)*TCM_LF_SPEED; tcmLY += (toY/dist)*TCM_LF_SPEED; }
+  const lf = document.getElementById('tcmLeatherface');
+  lf.style.left = (tcmLX - 40) + 'px'; lf.style.top = (tcmLY - 60) + 'px';
+  lf.style.transform = toX < 0 ? 'scaleX(-1)' : '';
+
+  tcmUpdateDark();
+
+  if (dist < 250) {
+    const sh = Math.round((250 - dist) / 40);
+    tcmGame.style.transform = `translate(${(Math.random()-.5)*sh*2}px,${(Math.random()-.5)*sh*2}px)`;
+  } else { tcmGame.style.transform = ''; }
+
+  if (dist < 300 && !tcmJumpLocked && Math.random() < 0.004) tcmJumpScare(false);
+  if (dist < TCM_CATCH) { tcmDie(); return; }
+
+  const exit = document.getElementById('tcmExit');
+  const er = exit.getBoundingClientRect();
+  const exitDist = Math.hypot(tcmPX - (er.left + 27), tcmPY - (er.top + 43));
+  if (exitDist < TCM_EXIT) { tcmEscape(); return; }
+
+  tcmRafId2 = requestAnimationFrame(tcmLoop);
+}
+
+function tcmUpdateDark() {
+  const pct = `${tcmPX}px ${tcmPY}px`;
+  const mask = `radial-gradient(circle 150px at ${pct}, transparent 0%, black 72%)`;
+  tcmDark.style.maskImage = mask;
+  tcmDark.style.webkitMaskImage = mask;
+}
+
+function tcmTouchExit() { if (tcmAlive) tcmEscape(); }
+
+function tcmTick() {
+  if (!tcmAlive) return;
+  tcmTimeLeft2--;
+  document.getElementById('tcmHUD').textContent = `⚡ ${tcmTimeLeft2}s — FIND THE EXIT!`;
+  if (tcmTimeLeft2 <= 0) tcmDie();
+}
+
+function tcmJumpScare(isDeath) {
+  tcmJumpLocked = true;
+  const js = document.getElementById('tcmJumpScare');
+  js.style.display = 'flex';
+  const dur = isDeath ? 900 : 550;
+  setTimeout(() => {
+    js.style.display = 'none';
+    if (!isDeath) setTimeout(() => { tcmJumpLocked = false; }, 4000);
+  }, dur);
+}
+
+function tcmDie() {
+  tcmAlive = false;
+  cancelAnimationFrame(tcmRafId2); clearInterval(tcmTickId);
+  tcmGame.style.transform = '';
+  document.removeEventListener('keydown', tcmKD);
+  document.removeEventListener('keyup', tcmKU);
+  tcmJumpScare(true);
+  setTimeout(() => {
+    const msg = document.getElementById('tcmMsg');
+    document.getElementById('tcmMsgText').textContent = '☠️ LEATHERFACE GOT YOU ☠️';
+    document.getElementById('tcmMsgText').style.color = '#cc0000';
+    document.getElementById('tcmMsgBtn').textContent = 'TRY AGAIN';
+    document.getElementById('tcmMsgBtn').onclick = tcmRestart;
+    msg.style.display = 'flex';
+  }, 950);
+}
+
+function tcmRestart() {
+  tcmKeys2 = {};
+  document.getElementById('tcmMsg').style.display = 'none';
+  tcmStartRound();
+}
+
+function tcmEscape() {
+  tcmAlive = false;
+  cancelAnimationFrame(tcmRafId2); clearInterval(tcmTickId);
+  tcmGame.style.transform = '';
+  document.removeEventListener('keydown', tcmKD);
+  document.removeEventListener('keyup', tcmKU);
+  const msg = document.getElementById('tcmMsg');
+  document.getElementById('tcmMsgText').textContent = '🚗 YOU ESCAPED!';
+  document.getElementById('tcmMsgText').style.color = '#00ff88';
+  document.getElementById('tcmMsgBtn').textContent = 'Continue...';
+  document.getElementById('tcmMsgBtn').onclick = () => { tcmGame.style.display = 'none'; fullReset(); };
+  msg.style.display = 'flex';
+}
+
+// ─── RESET ───────────────────────────────────────────────
+function resetRound() {
+  state = 'idle';
+  chicken.className = '';
+  chicken.style.display    = 'none';
+  chicken.style.transform  = '';
+  chicken.style.opacity    = '1';
+  chicken.style.transition = '';
+  launchBtn.disabled = false;
+  hint.textContent = 'Click the button to send a chicken running!';
+  dragArrow.style.display = 'block';
+  mouthTarget = 0.18; // back to resting open
+
+  faceX = 80;
+  faceY = window.innerHeight * .5 - R;
+  placeFace(faceX, faceY);
+}
+</script>
 </body>
 </html>
